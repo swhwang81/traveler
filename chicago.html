@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>시카고 1박 2일 여행 일정 지도</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://en.wikipedia.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root { --bg:#f4f5f7; --card:#fff; --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; background:var(--bg); color:var(--ink); }
+    header { background:linear-gradient(135deg,#111827,#0f766e); color:white; padding:24px 28px 20px; }
+    header h1 { margin:0 0 8px; font-size:28px; letter-spacing:-.03em; }
+    header p { margin:0; color:#ccfbf1; line-height:1.5; font-size:15px; }
+    .tabs { margin-top:16px; display:flex; flex-wrap:wrap; gap:8px; }
+    .tab { border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:white; padding:8px 10px; border-radius:999px; font-size:13px; cursor:pointer; }
+    .tab.active { background:white; color:#111827; font-weight:800; }
+    .layout { display:grid; grid-template-columns:minmax(520px,52%) 1fr; gap:16px; padding:16px; }
+    .left { display:flex; flex-direction:column; gap:16px; min-width:0; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:0 8px 22px rgba(17,24,39,.07); overflow:hidden; }
+    .day-head { padding:16px 18px; border-bottom:1px solid var(--line); }
+    .day-head h2 { margin:0 0 6px; font-size:20px; }
+    .day-head p { margin:0; color:var(--muted); line-height:1.5; font-size:14px; }
+    .route-link { display:inline-block; margin-top:10px; color:#0b57d0; font-weight:800; text-decoration:none; font-size:14px; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; padding:10px 12px; color:var(--muted); background:#f9fafb; border-bottom:1px solid var(--line); font-size:12px; white-space:nowrap; }
+    td { padding:12px; border-bottom:1px solid var(--line); vertical-align:top; font-size:14px; line-height:1.45; }
+    tr.place-row { cursor:pointer; }
+    tr.place-row:hover { background:#ecfdf5; }
+    tr.place-row.active { background:#ccfbf1; outline:2px solid #5eead4; outline-offset:-2px; }
+    .thumb { width:86px; height:62px; border-radius:12px; object-fit:cover; background:#f3f4f6; border:1px solid var(--line); display:block; }
+    .placeholder { width:86px; height:62px; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; padding:6px; background:linear-gradient(135deg,#e5e7eb,#f9fafb); border:1px solid var(--line); color:var(--muted); font-size:11px; }
+    .time { font-weight:800; white-space:nowrap; }
+    .name { font-weight:800; }
+    .ko { color:var(--muted); font-size:12px; margin-top:3px; }
+    .tag { display:inline-block; padding:3px 7px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#374151; white-space:nowrap; }
+    .desc { color:#4b5563; font-size:13px; }
+    .map-card { position:sticky; top:16px; height:calc(100vh - 32px); display:flex; flex-direction:column; background:white; border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:0 8px 22px rgba(17,24,39,.07); }
+    #map { flex:1; min-height:500px; width:100%; }
+    .info { border-top:1px solid var(--line); padding:14px 16px; display:grid; grid-template-columns:128px 1fr; gap:14px; align-items:start; }
+    #selectedImage { width:128px; height:92px; border-radius:14px; object-fit:cover; background:#f3f4f6; border:1px solid var(--line); }
+    .info h3 { margin:0 0 4px; font-size:18px; }
+    .info p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .popup-img { width:170px; height:105px; object-fit:cover; border-radius:10px; margin-bottom:7px; background:#f3f4f6; }
+    .popup-title { font-weight:800; margin-bottom:3px; }
+    .popup-sub { color:#6b7280; font-size:12px; margin-bottom:6px; }
+    .popup-desc { font-size:13px; line-height:1.45; }
+    .hidden { display:none; }
+    @media(max-width:1100px) { .layout { grid-template-columns:1fr; } .map-card { position:relative; top:0; height:68vh; order:-1; } }
+    @media(max-width:720px) { header { padding:22px 18px; } header h1 { font-size:23px; } .layout { padding:10px; } th:nth-child(5), td:nth-child(5) { display:none; } .thumb,.placeholder { width:74px; height:54px; } .info { grid-template-columns:92px 1fr; } #selectedImage { width:92px; height:70px; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>시카고 1박 2일 여행 일정 지도</h1>
+  <p>솔론 출발 기준으로 시카고 핵심 명소, 야경, 복귀 동선을 정리했습니다. 날짜 버튼을 누르면 해당 날짜 동선만 볼 수 있습니다.</p>
+  <div class="tabs" id="tabs"></div>
+</header>
+<main class="layout">
+  <section class="left" id="dayCards"></section>
+  <aside class="map-card">
+    <div id="map"></div>
+    <div class="info">
+      <img id="selectedImage" alt="selected place image">
+      <div>
+        <h3 id="selectedTitle">장소를 클릭해보세요</h3>
+        <p id="selectedText">일정표의 장소를 클릭하면 지도에서 위치와 사진, 설명을 볼 수 있습니다.</p>
+      </div>
+    </div>
+  </aside>
+</main>
+<script>
+const days = [{"date": "Day 1", "title": "Solon → Chicago Downtown", "routeMode": "driving", "summary": "솔론에서 오전 일찍 출발해 시카고 다운타운에 도착한 뒤, Millennium Park, Riverwalk, 건축 크루즈, 야경을 보는 일정입니다.", "stops": [{"time": "7:00", "name": "Solon, Ohio", "ko": "솔론 출발", "lat": 41.3898, "lon": -81.4412, "category": "출발", "description": "시카고까지 장거리 운전을 시작합니다. 중간 휴식 포함 약 6시간 전후를 예상하면 좋습니다.", "tip": "아침에 출발하면 오후 1시 전후 시카고 도착을 목표로 잡을 수 있습니다.", "wiki": "Solon,_Ohio", "query": "Solon Ohio"}, {"time": "10:00", "name": "Indiana Toll Road Rest Area", "ko": "인디애나 톨로드 휴게소", "lat": 41.669, "lon": -84.999, "category": "휴식", "description": "오하이오에서 시카고로 가는 중간에 쉬어가기 좋은 휴식 지점입니다.", "tip": "화장실, 간식, 주유를 한 번에 해결하세요.", "wiki": "Indiana_Toll_Road", "query": "Indiana Toll Road rest area"}, {"time": "1:00", "name": "Chicago Hotel / Downtown Parking", "ko": "시카고 호텔 / 다운타운 주차", "lat": 41.8781, "lon": -87.6298, "category": "도착", "description": "다운타운 호텔에 도착해 차를 세우고 이후 일정은 도보, 우버, 대중교통 중심으로 움직이는 것이 편합니다.", "tip": "다운타운 주차비가 비싸므로 호텔 주차비를 미리 확인하세요.", "wiki": "Chicago_Loop", "query": "Chicago downtown Loop"}, {"time": "1:30–2:30", "name": "Giordano's / Lou Malnati's / Portillo's", "ko": "점심: 딥디쉬 피자 또는 시카고 핫도그", "lat": 41.884, "lon": -87.6278, "category": "식사", "description": "시카고 대표 음식인 딥디쉬 피자나 시카고 핫도그를 먹기 좋은 시간입니다.", "tip": "딥디쉬 피자는 시간이 오래 걸릴 수 있으니 배고프면 핫도그나 캐주얼 식사가 더 편합니다.", "wiki": "Chicago-style_pizza", "query": "Chicago deep dish pizza"}, {"time": "2:40–4:00", "name": "Millennium Park / Cloud Gate", "ko": "밀레니엄 파크 / 클라우드 게이트", "lat": 41.8826, "lon": -87.6226, "category": "대표 명소", "description": "The Bean으로 유명한 Cloud Gate가 있는 시카고 대표 무료 명소입니다.", "tip": "가족 사진을 찍기 좋은 필수 코스입니다.", "wiki": "Millennium_Park", "query": "Millennium Park Cloud Gate Chicago"}, {"time": "4:10–5:00", "name": "Chicago Riverwalk", "ko": "시카고 리버워크", "lat": 41.8874, "lon": -87.6272, "category": "산책", "description": "시카고 강을 따라 걷는 산책로입니다. 강과 고층 건축물이 함께 보이는 분위기가 좋습니다.", "tip": "건축 크루즈 탑승 전후로 연결하기 좋습니다.", "wiki": "Chicago_Riverwalk", "query": "Chicago Riverwalk"}, {"time": "5:00–6:30", "name": "Chicago Architecture River Cruise", "ko": "시카고 건축 리버 크루즈", "lat": 41.8879, "lon": -87.6262, "category": "크루즈", "description": "시카고의 건축과 도시 역사를 강 위에서 보는 대표 투어입니다.", "tip": "사전 예약을 추천합니다. 해질 무렵 시간대가 특히 좋습니다.", "wiki": "Chicago_River", "query": "Chicago Architecture River Cruise"}, {"time": "7:00–8:00", "name": "Dinner near River North", "ko": "저녁: 리버노스 근처", "lat": 41.8925, "lon": -87.6344, "category": "식사", "description": "River North는 식당이 많고 Riverwalk, Magnificent Mile과 연결하기 좋은 지역입니다.", "tip": "아이들과 함께라면 예약 가능한 캐주얼 식당이 편합니다.", "wiki": "River_North_Gallery_District,_Near_North_Side,_Chicago", "query": "River North Chicago restaurants"}, {"time": "8:20–9:30", "name": "Navy Pier", "ko": "네이비 피어", "lat": 41.8917, "lon": -87.6078, "category": "야경", "description": "호수 옆 산책과 야경을 함께 즐길 수 있는 가족 여행 코스입니다.", "tip": "늦은 밤까지 무리하지 않고 산책만 해도 좋습니다.", "wiki": "Navy_Pier", "query": "Navy Pier Chicago night"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=41.3898%2C-81.4412&destination=41.8917%2C-87.6078&waypoints=41.669%2C-84.999%7C41.8781%2C-87.6298%7C41.884%2C-87.6278%7C41.8826%2C-87.6226%7C41.8874%2C-87.6272%7C41.8879%2C-87.6262%7C41.8925%2C-87.6344&travelmode=driving"}, {"date": "Day 2", "title": "Chicago Downtown → Solon", "routeMode": "driving", "summary": "오전에는 미술관 또는 쇼핑거리, 공원 전망을 보고 오후 2시쯤 시카고를 출발해 솔론으로 돌아오는 일정입니다.", "stops": [{"time": "8:30", "name": "Chicago Hotel", "ko": "호텔 체크아웃", "lat": 41.8781, "lon": -87.6298, "category": "출발", "description": "체크아웃 후 짐을 차에 싣거나 호텔에 잠시 맡기고 오전 관광을 시작합니다.", "tip": "주차 연장 가능 여부를 호텔에 확인하세요.", "wiki": "Chicago_Loop", "query": "Chicago downtown hotel"}, {"time": "9:00–10:00", "name": "Magnificent Mile", "ko": "매그니피센트 마일", "lat": 41.8948, "lon": -87.6242, "category": "거리·쇼핑", "description": "시카고의 대표 쇼핑 거리입니다. 아침 산책이나 간단한 쇼핑 코스로 좋습니다.", "tip": "쇼핑을 오래 하면 복귀 시간이 늦어질 수 있으니 짧게 보는 것을 추천합니다.", "wiki": "Magnificent_Mile", "query": "Magnificent Mile Chicago"}, {"time": "10:15–12:00", "name": "Art Institute of Chicago", "ko": "시카고 미술관", "lat": 41.8796, "lon": -87.6237, "category": "미술관", "description": "시카고를 대표하는 세계적인 미술관입니다. 관심이 있다면 1박 2일 일정에서도 충분히 넣을 만합니다.", "tip": "관심이 적다면 이 시간을 Riverwalk, 쇼핑, 카페 시간으로 바꿔도 됩니다.", "wiki": "Art_Institute_of_Chicago", "query": "Art Institute of Chicago"}, {"time": "12:00–1:00", "name": "Lunch near Millennium Park", "ko": "점심: 밀레니엄 파크 근처", "lat": 41.8815, "lon": -87.6237, "category": "식사", "description": "출발 전 다운타운에서 점심을 먹고 복귀 운전을 준비합니다.", "tip": "오후 운전을 위해 너무 늦게 식사를 끝내지 않는 것이 좋습니다.", "wiki": "Millennium_Park", "query": "Millennium Park restaurants"}, {"time": "1:00–1:40", "name": "Buckingham Fountain / Grant Park", "ko": "버킹엄 분수 / 그랜트 파크", "lat": 41.8758, "lon": -87.6189, "category": "사진", "description": "시카고 다운타운과 호수 분위기를 함께 느낄 수 있는 마지막 사진 코스입니다.", "tip": "시간이 부족하면 생략하고 바로 출발해도 됩니다.", "wiki": "Buckingham_Fountain", "query": "Buckingham Fountain Chicago"}, {"time": "2:00", "name": "Chicago Departure", "ko": "시카고 출발", "lat": 41.8781, "lon": -87.6298, "category": "복귀", "description": "시카고에서 솔론 방향으로 출발합니다.", "tip": "시카고 시내 교통 정체를 고려해 너무 늦게 출발하지 않는 것이 좋습니다.", "wiki": "Chicago", "query": "Chicago skyline"}, {"time": "8:30–9:00", "name": "Solon, Ohio", "ko": "솔론 도착", "lat": 41.3898, "lon": -81.4412, "category": "도착", "description": "중간 휴식과 시차를 고려하면 밤 도착을 예상하는 것이 좋습니다.", "tip": "복귀일 다음날 일정은 여유 있게 잡는 것이 좋습니다.", "wiki": "Solon,_Ohio", "query": "Solon Ohio"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=41.8781%2C-87.6298&destination=41.3898%2C-81.4412&waypoints=41.8948%2C-87.6242%7C41.8796%2C-87.6237%7C41.8815%2C-87.6237%7C41.8758%2C-87.6189%7C41.8781%2C-87.6298&travelmode=driving"}];
+const allPlaces = [];
+days.forEach((day, dayIndex) => {
+  day.stops.forEach((stop, stopIndex) => {
+    allPlaces.push({...stop, date:day.date, dayIndex, stopIndex});
+  });
+});
+const imageCache = new Map();
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+function fallbackImage(place) { return `https://source.unsplash.com/320x220/?${encodeURIComponent(place.query || place.name)}`; }
+async function loadImage(place, globalIndex) {
+  if (imageCache.has(globalIndex)) return imageCache.get(globalIndex);
+  let url = `https://en.wikipedia.org/api/rest_v1/page/summary/${place.wiki}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("no image");
+    const data = await res.json();
+    const img = data.thumbnail?.source || data.originalimage?.source || fallbackImage(place);
+    imageCache.set(globalIndex, img);
+    return img;
+  } catch(e) {
+    const img = fallbackImage(place);
+    imageCache.set(globalIndex, img);
+    return img;
+  }
+}
+function rowHtml(place, globalIndex) {
+  return `<tr class="place-row" data-index="${globalIndex}" data-day="${place.dayIndex}">
+    <td><div class="placeholder" id="thumbBox-${globalIndex}">${place.category}</div></td>
+    <td class="time">${place.time}</td>
+    <td><div class="name">${place.stopIndex+1}. ${place.name}</div><div class="ko">${place.ko}</div></td>
+    <td><span class="tag">${place.category}</span></td>
+    <td><div class="desc">${place.description}</div></td>
+  </tr>`;
+}
+function buildCards() {
+  const container = document.getElementById("dayCards");
+  container.innerHTML = days.map((day, di) => {
+    const rows = allPlaces.map((p, gi) => p.dayIndex === di ? rowHtml(p, gi) : "").join("");
+    return `<section class="card day-card" data-day-card="${di}">
+      <div class="day-head">
+        <h2>${day.date} · ${day.title}</h2>
+        <p>${day.summary}</p>
+        <a class="route-link" href="${day.googleMapsUrl}" target="_blank">Google Maps에서 이 날짜 경로 열기</a>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>사진</th><th>시간</th><th>장소</th><th>구분</th><th>설명</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </section>`;
+  }).join("");
+}
+function buildTabs() {
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = `<button class="tab active" data-day="all">전체</button>` + days.map((d,i)=>`<button class="tab" data-day="${i}">${d.date}</button>`).join("");
+}
+buildCards(); buildTabs();
+
+const map = L.map("map").setView([41.9,-84.7], 6);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom:19, attribution:"&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+const colors = ["#0f766e","#2563eb"];
+const markerMap = new Map();
+const polylines = [];
+const allBounds = [];
+function markerIcon(place) {
+  const color = colors[place.dayIndex % colors.length];
+  return L.divIcon({
+    className:"",
+    html:`<div style="width:28px;height:28px;border-radius:50%;background:${color};color:white;display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:12px;">${place.dayIndex+1}-${place.stopIndex+1}</div>`,
+    iconSize:[28,28], iconAnchor:[14,14]
+  });
+}
+function popupHtml(place, img) {
+  return `${img ? `<img class="popup-img" src="${img}" alt="${place.name}">` : ""}
+  <div class="popup-title">${place.date} · ${place.stopIndex+1}. ${place.name}</div>
+  <div class="popup-sub">${place.ko} · ${place.time} · ${place.category}</div>
+  <div class="popup-desc">${place.description}<br><br><b>Tip:</b> ${place.tip}</div>`;
+}
+allPlaces.forEach((place, gi) => {
+  const marker = L.marker([place.lat, place.lon], {icon:markerIcon(place)})
+    .addTo(map)
+    .bindPopup(`<div class="popup-title">${place.name}</div><div class="popup-desc">사진을 불러오는 중입니다.</div>`);
+  marker.on("click", () => selectPlace(gi, true));
+  markerMap.set(gi, marker);
+  allBounds.push([place.lat, place.lon]);
+});
+days.forEach((day, di) => {
+  const line = L.polyline(day.stops.map(s => [s.lat, s.lon]), {
+    weight:4, opacity:.82, color:colors[di % colors.length]
+  }).addTo(map);
+  line.dayIndex = di;
+  polylines.push(line);
+});
+map.fitBounds(allBounds, {padding:[40,40]});
+async function populateImages() {
+  for (let gi=0; gi<allPlaces.length; gi++) {
+    const p = allPlaces[gi];
+    const img = await loadImage(p, gi);
+    const box = document.getElementById(`thumbBox-${gi}`);
+    if (box) box.outerHTML = `<img class="thumb" id="thumb-${gi}" src="${img}" alt="${p.name}" loading="lazy">`;
+    const marker = markerMap.get(gi);
+    if (marker) marker.setPopupContent(popupHtml(p, img));
+  }
+}
+async function selectPlace(gi, fromMarker=false) {
+  const p = allPlaces[gi];
+  const img = await loadImage(p, gi);
+  document.querySelectorAll(".place-row").forEach(r=>r.classList.remove("active"));
+  const row = document.querySelector(`.place-row[data-index="${gi}"]`);
+  if (row) {
+    row.classList.add("active");
+    if (!fromMarker) row.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+  map.setView([p.lat,p.lon], 13, {animate:true});
+  const marker = markerMap.get(gi);
+  marker.setPopupContent(popupHtml(p,img));
+  marker.openPopup();
+  document.getElementById("selectedImage").src = img;
+  document.getElementById("selectedTitle").textContent = `${p.date} · ${p.name}`;
+  document.getElementById("selectedText").textContent = `${p.ko} · ${p.time} · ${p.description}`;
+}
+document.querySelectorAll(".place-row").forEach(row => {
+  row.addEventListener("click", () => selectPlace(Number(row.dataset.index)));
+});
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const d = btn.dataset.day;
+    document.querySelectorAll(".day-card").forEach(card => {
+      card.classList.toggle("hidden", d !== "all" && card.dataset.dayCard !== d);
+    });
+    allPlaces.forEach((p, gi) => {
+      const show = d === "all" || String(p.dayIndex) === d;
+      const marker = markerMap.get(gi);
+      if (show) marker.addTo(map); else marker.removeFrom(map);
+    });
+    polylines.forEach(line => {
+      const show = d === "all" || String(line.dayIndex) === d;
+      if (show) line.addTo(map); else line.removeFrom(map);
+    });
+    if (d === "all") {
+      map.fitBounds(allBounds, {padding:[40,40]});
+    } else {
+      const b = days[Number(d)].stops.map(s=>[s.lat,s.lon]);
+      map.fitBounds(b, {padding:[40,40]});
+    }
+  });
+});
+populateImages();
+setTimeout(()=>selectPlace(0), 500);
+</script>
+</body>
+</html>

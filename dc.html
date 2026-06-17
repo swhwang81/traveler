@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>워싱턴 DC 1박 2일 여행 일정 지도</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://en.wikipedia.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root { --bg:#f4f5f7; --card:#fff; --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; background:var(--bg); color:var(--ink); }
+    header { background:linear-gradient(135deg,#111827,#7f1d1d); color:white; padding:24px 28px 20px; }
+    header h1 { margin:0 0 8px; font-size:28px; letter-spacing:-.03em; }
+    header p { margin:0; color:#fee2e2; line-height:1.5; font-size:15px; }
+    .tabs { margin-top:16px; display:flex; flex-wrap:wrap; gap:8px; }
+    .tab { border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:white; padding:8px 10px; border-radius:999px; font-size:13px; cursor:pointer; }
+    .tab.active { background:white; color:#111827; font-weight:800; }
+    .layout { display:grid; grid-template-columns:minmax(520px,52%) 1fr; gap:16px; padding:16px; }
+    .left { display:flex; flex-direction:column; gap:16px; min-width:0; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:0 8px 22px rgba(17,24,39,.07); overflow:hidden; }
+    .day-head { padding:16px 18px; border-bottom:1px solid var(--line); }
+    .day-head h2 { margin:0 0 6px; font-size:20px; }
+    .day-head p { margin:0; color:var(--muted); line-height:1.5; font-size:14px; }
+    .route-link { display:inline-block; margin-top:10px; color:#0b57d0; font-weight:800; text-decoration:none; font-size:14px; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    th { text-align:left; padding:10px 12px; color:var(--muted); background:#f9fafb; border-bottom:1px solid var(--line); font-size:12px; white-space:nowrap; }
+    td { padding:12px; border-bottom:1px solid var(--line); vertical-align:top; font-size:14px; line-height:1.45; }
+    tr.place-row { cursor:pointer; }
+    tr.place-row:hover { background:#fff1f2; }
+    tr.place-row.active { background:#fee2e2; outline:2px solid #fca5a5; outline-offset:-2px; }
+    .thumb { width:86px; height:62px; border-radius:12px; object-fit:cover; background:#f3f4f6; border:1px solid var(--line); display:block; }
+    .placeholder { width:86px; height:62px; border-radius:12px; display:flex; align-items:center; justify-content:center; text-align:center; padding:6px; background:linear-gradient(135deg,#e5e7eb,#f9fafb); border:1px solid var(--line); color:var(--muted); font-size:11px; }
+    .time { font-weight:800; white-space:nowrap; }
+    .name { font-weight:800; }
+    .ko { color:var(--muted); font-size:12px; margin-top:3px; }
+    .tag { display:inline-block; padding:3px 7px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#374151; white-space:nowrap; }
+    .desc { color:#4b5563; font-size:13px; }
+    .map-card { position:sticky; top:16px; height:calc(100vh - 32px); display:flex; flex-direction:column; background:white; border:1px solid var(--line); border-radius:18px; overflow:hidden; box-shadow:0 8px 22px rgba(17,24,39,.07); }
+    #map { flex:1; min-height:500px; width:100%; }
+    .info { border-top:1px solid var(--line); padding:14px 16px; display:grid; grid-template-columns:128px 1fr; gap:14px; align-items:start; }
+    #selectedImage { width:128px; height:92px; border-radius:14px; object-fit:cover; background:#f3f4f6; border:1px solid var(--line); }
+    .info h3 { margin:0 0 4px; font-size:18px; }
+    .info p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .popup-img { width:170px; height:105px; object-fit:cover; border-radius:10px; margin-bottom:7px; background:#f3f4f6; }
+    .popup-title { font-weight:800; margin-bottom:3px; }
+    .popup-sub { color:#6b7280; font-size:12px; margin-bottom:6px; }
+    .popup-desc { font-size:13px; line-height:1.45; }
+    .hidden { display:none; }
+    @media(max-width:1100px) { .layout { grid-template-columns:1fr; } .map-card { position:relative; top:0; height:68vh; order:-1; } }
+    @media(max-width:720px) { header { padding:22px 18px; } header h1 { font-size:23px; } .layout { padding:10px; } th:nth-child(5), td:nth-child(5) { display:none; } .thumb,.placeholder { width:74px; height:54px; } .info { grid-template-columns:92px 1fr; } #selectedImage { width:92px; height:70px; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>워싱턴 DC 1박 2일 여행 일정 지도</h1>
+  <p>솔론 출발 기준으로 백악관, National Mall, 링컨 기념관, Smithsonian, Capitol 동선을 정리했습니다. 날짜 버튼을 누르면 해당 날짜 동선만 볼 수 있습니다.</p>
+  <div class="tabs" id="tabs"></div>
+</header>
+<main class="layout">
+  <section class="left" id="dayCards"></section>
+  <aside class="map-card">
+    <div id="map"></div>
+    <div class="info">
+      <img id="selectedImage" alt="selected place image">
+      <div>
+        <h3 id="selectedTitle">장소를 클릭해보세요</h3>
+        <p id="selectedText">일정표의 장소를 클릭하면 지도에서 위치와 사진, 설명을 볼 수 있습니다.</p>
+      </div>
+    </div>
+  </aside>
+</main>
+<script>
+const days = [{"date": "Day 1", "title": "Solon → Washington DC", "routeMode": "driving", "summary": "솔론에서 오전 일찍 출발해 워싱턴 DC에 도착한 뒤, National Mall 서쪽 구역과 백악관 주변, 링컨 기념관 야경을 보는 일정입니다.", "stops": [{"time": "7:00", "name": "Solon, Ohio", "ko": "솔론 출발", "lat": 41.3898, "lon": -81.4412, "category": "출발", "description": "워싱턴 DC까지 장거리 운전을 시작합니다. 중간 휴식 포함 약 6시간 30분~7시간 전후를 예상하면 좋습니다.", "tip": "아침 일찍 출발하면 오후 2시 전후 DC 도착을 목표로 잡을 수 있습니다.", "wiki": "Solon,_Ohio", "query": "Solon Ohio"}, {"time": "10:00", "name": "Somerset Service Plaza / Pennsylvania Turnpike", "ko": "펜실베이니아 턴파이크 휴게소", "lat": 40.0495, "lon": -79.045, "category": "휴식", "description": "오하이오에서 워싱턴 DC로 가는 길에 쉬어가기 좋은 펜실베이니아 구간 휴식 지점입니다.", "tip": "화장실, 커피, 간식, 주유를 한 번에 해결하세요.", "wiki": "Pennsylvania_Turnpike", "query": "Pennsylvania Turnpike service plaza"}, {"time": "1:30–2:00", "name": "Washington DC Hotel / Parking", "ko": "워싱턴 DC 호텔 / 주차", "lat": 38.9072, "lon": -77.0369, "category": "도착", "description": "DC 도착 후 호텔에 차를 세우고, 이후 일정은 도보·우버·메트로 중심으로 움직이는 것이 편합니다.", "tip": "DC 시내 주차비가 비싸므로 호텔 주차비와 체크인 시간을 미리 확인하세요.", "wiki": "Washington,_D.C.", "query": "Washington DC downtown"}, {"time": "2:30–3:20", "name": "White House / Lafayette Square", "ko": "백악관 / 라파예트 스퀘어", "lat": 38.8977, "lon": -77.0365, "category": "대표 명소", "description": "워싱턴 DC를 대표하는 정치·역사 명소입니다. 외부 관람과 사진 촬영 중심으로 방문합니다.", "tip": "보안 통제로 접근 가능한 방향이 바뀔 수 있어 현장에서 안내를 따르세요.", "wiki": "White_House", "query": "White House Washington DC"}, {"time": "3:40–4:20", "name": "Washington Monument", "ko": "워싱턴 기념탑", "lat": 38.8895, "lon": -77.0353, "category": "기념물", "description": "National Mall의 중심축에 있는 오벨리스크 형태의 대표 기념탑입니다.", "tip": "넓은 잔디와 기념탑을 배경으로 가족 사진을 찍기 좋습니다.", "wiki": "Washington_Monument", "query": "Washington Monument"}, {"time": "4:30–5:10", "name": "World War II Memorial", "ko": "제2차 세계대전 기념비", "lat": 38.8893, "lon": -77.0405, "category": "기념비", "description": "워싱턴 기념탑과 링컨 기념관 사이에 있는 대형 기념 공간입니다.", "tip": "Reflecting Pool 방향으로 이어서 걷기 좋습니다.", "wiki": "World_War_II_Memorial", "query": "World War II Memorial Washington DC"}, {"time": "5:20–6:10", "name": "Lincoln Memorial / Reflecting Pool", "ko": "링컨 기념관 / 리플렉팅 풀", "lat": 38.8893, "lon": -77.0502, "category": "기념관", "description": "DC에서 가장 상징적인 기념관 중 하나입니다. Reflecting Pool과 함께 보는 풍경이 매우 인상적입니다.", "tip": "해질 무렵과 야경 모두 좋아 1일차 하이라이트로 추천합니다.", "wiki": "Lincoln_Memorial", "query": "Lincoln Memorial Reflecting Pool"}, {"time": "6:30–7:30", "name": "Dinner near Foggy Bottom / Georgetown", "ko": "저녁: 포기바텀 또는 조지타운 근처", "lat": 38.9047, "lon": -77.0628, "category": "식사", "description": "기념관 관람 후 이동하기 좋은 식사 지역입니다. 조지타운은 분위기 있는 거리와 식당이 많습니다.", "tip": "아이들과 함께라면 예약 가능한 캐주얼 식당을 추천합니다.", "wiki": "Georgetown_(Washington,_D.C.)", "query": "Georgetown Washington DC restaurants"}, {"time": "8:00–9:00", "name": "Georgetown Waterfront Park", "ko": "조지타운 워터프런트 파크", "lat": 38.9029, "lon": -77.0646, "category": "야경·산책", "description": "포토맥 강변 산책을 즐길 수 있는 곳입니다. 저녁 식사 후 가볍게 걷기 좋습니다.", "tip": "늦은 밤까지 무리하지 않고 산책만 하고 호텔로 복귀하세요.", "wiki": "Georgetown_Waterfront_Park", "query": "Georgetown Waterfront Park"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=41.3898%2C-81.4412&destination=38.9029%2C-77.0646&waypoints=40.0495%2C-79.045%7C38.9072%2C-77.0369%7C38.8977%2C-77.0365%7C38.8895%2C-77.0353%7C38.8893%2C-77.0405%7C38.8893%2C-77.0502%7C38.9047%2C-77.0628&travelmode=driving"}, {"date": "Day 2", "title": "Washington DC → Solon", "routeMode": "driving", "summary": "오전에는 Smithsonian 박물관 또는 Capitol 주변을 보고, 점심 후 솔론으로 돌아오는 일정입니다.", "stops": [{"time": "8:30", "name": "Washington DC Hotel", "ko": "호텔 체크아웃", "lat": 38.9072, "lon": -77.0369, "category": "출발", "description": "체크아웃 후 짐을 차에 싣거나 호텔에 잠시 맡기고 오전 관광을 시작합니다.", "tip": "주차 연장 가능 여부를 호텔에 확인하세요.", "wiki": "Washington,_D.C.", "query": "Washington DC downtown hotel"}, {"time": "9:00–10:30", "name": "National Air and Space Museum", "ko": "국립항공우주박물관", "lat": 38.8882, "lon": -77.0199, "category": "박물관", "description": "비행기, 우주선, 항공우주 역사 전시로 가족 여행 만족도가 높은 Smithsonian 박물관입니다.", "tip": "입장 예약이 필요한 경우가 있으니 방문 전 공식 안내를 확인하세요.", "wiki": "National_Air_and_Space_Museum", "query": "National Air and Space Museum"}, {"time": "10:45–11:30", "name": "United States Capitol / Capitol Reflecting Pool", "ko": "미국 국회의사당 / 캐피톨 리플렉팅 풀", "lat": 38.8899, "lon": -77.0091, "category": "대표 명소", "description": "미국 의회의 상징적인 건축물입니다. 외부 관람과 사진 촬영 중심으로 보기 좋습니다.", "tip": "박물관에서 걸어가거나 우버로 짧게 이동하면 됩니다.", "wiki": "United_States_Capitol", "query": "United States Capitol Washington DC"}, {"time": "11:45–12:30", "name": "National Gallery of Art Sculpture Garden / National Mall", "ko": "내셔널 갤러리 조각정원 / 내셔널 몰", "lat": 38.8913, "lon": -77.0229, "category": "산책", "description": "National Mall 주변을 가볍게 산책하며 DC의 박물관·기념비 분위기를 느낄 수 있습니다.", "tip": "시간이 부족하면 이 구간은 생략하고 바로 점심으로 이동해도 됩니다.", "wiki": "National_Gallery_of_Art_Sculpture_Garden", "query": "National Gallery of Art Sculpture Garden"}, {"time": "12:30–1:30", "name": "Lunch near Penn Quarter / Chinatown", "ko": "점심: 펜쿼터 / 차이나타운 근처", "lat": 38.8999, "lon": -77.0217, "category": "식사", "description": "박물관과 내셔널 몰에서 접근하기 좋은 식사 지역입니다.", "tip": "복귀 운전을 위해 점심을 너무 늦게 끝내지 않는 것이 좋습니다.", "wiki": "Chinatown_(Washington,_D.C.)", "query": "Penn Quarter Chinatown DC restaurants"}, {"time": "2:00", "name": "Washington DC Departure", "ko": "워싱턴 DC 출발", "lat": 38.9072, "lon": -77.0369, "category": "복귀", "description": "워싱턴 DC에서 솔론 방향으로 출발합니다.", "tip": "주말·출퇴근 시간대 교통을 고려해 너무 늦게 출발하지 않는 것이 좋습니다.", "wiki": "Washington,_D.C.", "query": "Washington DC skyline"}, {"time": "5:00", "name": "Pennsylvania Turnpike Rest Stop", "ko": "펜실베이니아 휴게소", "lat": 40.0495, "lon": -79.045, "category": "휴식", "description": "복귀 중간에 쉬어가기 좋은 휴식 지점입니다.", "tip": "저녁 전 간식, 화장실, 주유를 해결하세요.", "wiki": "Pennsylvania_Turnpike", "query": "Pennsylvania Turnpike"}, {"time": "8:30–9:30", "name": "Solon, Ohio", "ko": "솔론 도착", "lat": 41.3898, "lon": -81.4412, "category": "도착", "description": "중간 휴식과 도로 상황을 고려하면 밤 도착을 예상하는 것이 좋습니다.", "tip": "복귀 다음날 일정은 여유 있게 잡는 것이 좋습니다.", "wiki": "Solon,_Ohio", "query": "Solon Ohio"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=38.9072%2C-77.0369&destination=41.3898%2C-81.4412&waypoints=38.8882%2C-77.0199%7C38.8899%2C-77.0091%7C38.8913%2C-77.0229%7C38.8999%2C-77.0217%7C38.9072%2C-77.0369%7C40.0495%2C-79.045&travelmode=driving"}];
+const allPlaces = [];
+days.forEach((day, dayIndex) => {
+  day.stops.forEach((stop, stopIndex) => {
+    allPlaces.push({...stop, date:day.date, dayIndex, stopIndex});
+  });
+});
+const imageCache = new Map();
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+function fallbackImage(place) { return `https://source.unsplash.com/320x220/?${encodeURIComponent(place.query || place.name)}`; }
+async function loadImage(place, globalIndex) {
+  if (imageCache.has(globalIndex)) return imageCache.get(globalIndex);
+  let url = `https://en.wikipedia.org/api/rest_v1/page/summary/${place.wiki}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("no image");
+    const data = await res.json();
+    const img = data.thumbnail?.source || data.originalimage?.source || fallbackImage(place);
+    imageCache.set(globalIndex, img);
+    return img;
+  } catch(e) {
+    const img = fallbackImage(place);
+    imageCache.set(globalIndex, img);
+    return img;
+  }
+}
+function rowHtml(place, globalIndex) {
+  return `<tr class="place-row" data-index="${globalIndex}" data-day="${place.dayIndex}">
+    <td><div class="placeholder" id="thumbBox-${globalIndex}">${place.category}</div></td>
+    <td class="time">${place.time}</td>
+    <td><div class="name">${place.stopIndex+1}. ${place.name}</div><div class="ko">${place.ko}</div></td>
+    <td><span class="tag">${place.category}</span></td>
+    <td><div class="desc">${place.description}</div></td>
+  </tr>`;
+}
+function buildCards() {
+  const container = document.getElementById("dayCards");
+  container.innerHTML = days.map((day, di) => {
+    const rows = allPlaces.map((p, gi) => p.dayIndex === di ? rowHtml(p, gi) : "").join("");
+    return `<section class="card day-card" data-day-card="${di}">
+      <div class="day-head">
+        <h2>${day.date} · ${day.title}</h2>
+        <p>${day.summary}</p>
+        <a class="route-link" href="${day.googleMapsUrl}" target="_blank">Google Maps에서 이 날짜 경로 열기</a>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>사진</th><th>시간</th><th>장소</th><th>구분</th><th>설명</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </section>`;
+  }).join("");
+}
+function buildTabs() {
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = `<button class="tab active" data-day="all">전체</button>` + days.map((d,i)=>`<button class="tab" data-day="${i}">${d.date}</button>`).join("");
+}
+buildCards(); buildTabs();
+
+const map = L.map("map").setView([39.5,-79.5], 6);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom:19, attribution:"&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+const colors = ["#991b1b","#2563eb"];
+const markerMap = new Map();
+const polylines = [];
+const allBounds = [];
+function markerIcon(place) {
+  const color = colors[place.dayIndex % colors.length];
+  return L.divIcon({
+    className:"",
+    html:`<div style="width:28px;height:28px;border-radius:50%;background:${color};color:white;display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:12px;">${place.dayIndex+1}-${place.stopIndex+1}</div>`,
+    iconSize:[28,28], iconAnchor:[14,14]
+  });
+}
+function popupHtml(place, img) {
+  return `${img ? `<img class="popup-img" src="${img}" alt="${place.name}">` : ""}
+  <div class="popup-title">${place.date} · ${place.stopIndex+1}. ${place.name}</div>
+  <div class="popup-sub">${place.ko} · ${place.time} · ${place.category}</div>
+  <div class="popup-desc">${place.description}<br><br><b>Tip:</b> ${place.tip}</div>`;
+}
+allPlaces.forEach((place, gi) => {
+  const marker = L.marker([place.lat, place.lon], {icon:markerIcon(place)})
+    .addTo(map)
+    .bindPopup(`<div class="popup-title">${place.name}</div><div class="popup-desc">사진을 불러오는 중입니다.</div>`);
+  marker.on("click", () => selectPlace(gi, true));
+  markerMap.set(gi, marker);
+  allBounds.push([place.lat, place.lon]);
+});
+days.forEach((day, di) => {
+  const line = L.polyline(day.stops.map(s => [s.lat, s.lon]), {
+    weight:4, opacity:.82, color:colors[di % colors.length]
+  }).addTo(map);
+  line.dayIndex = di;
+  polylines.push(line);
+});
+map.fitBounds(allBounds, {padding:[40,40]});
+async function populateImages() {
+  for (let gi=0; gi<allPlaces.length; gi++) {
+    const p = allPlaces[gi];
+    const img = await loadImage(p, gi);
+    const box = document.getElementById(`thumbBox-${gi}`);
+    if (box) box.outerHTML = `<img class="thumb" id="thumb-${gi}" src="${img}" alt="${p.name}" loading="lazy">`;
+    const marker = markerMap.get(gi);
+    if (marker) marker.setPopupContent(popupHtml(p, img));
+  }
+}
+async function selectPlace(gi, fromMarker=false) {
+  const p = allPlaces[gi];
+  const img = await loadImage(p, gi);
+  document.querySelectorAll(".place-row").forEach(r=>r.classList.remove("active"));
+  const row = document.querySelector(`.place-row[data-index="${gi}"]`);
+  if (row) {
+    row.classList.add("active");
+    if (!fromMarker) row.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+  map.setView([p.lat,p.lon], 13, {animate:true});
+  const marker = markerMap.get(gi);
+  marker.setPopupContent(popupHtml(p,img));
+  marker.openPopup();
+  document.getElementById("selectedImage").src = img;
+  document.getElementById("selectedTitle").textContent = `${p.date} · ${p.name}`;
+  document.getElementById("selectedText").textContent = `${p.ko} · ${p.time} · ${p.description}`;
+}
+document.querySelectorAll(".place-row").forEach(row => {
+  row.addEventListener("click", () => selectPlace(Number(row.dataset.index)));
+});
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const d = btn.dataset.day;
+    document.querySelectorAll(".day-card").forEach(card => {
+      card.classList.toggle("hidden", d !== "all" && card.dataset.dayCard !== d);
+    });
+    allPlaces.forEach((p, gi) => {
+      const show = d === "all" || String(p.dayIndex) === d;
+      const marker = markerMap.get(gi);
+      if (show) marker.addTo(map); else marker.removeFrom(map);
+    });
+    polylines.forEach(line => {
+      const show = d === "all" || String(line.dayIndex) === d;
+      if (show) line.addTo(map); else line.removeFrom(map);
+    });
+    if (d === "all") {
+      map.fitBounds(allBounds, {padding:[40,40]});
+    } else {
+      const b = days[Number(d)].stops.map(s=>[s.lat,s.lon]);
+      map.fitBounds(b, {padding:[40,40]});
+    }
+  });
+});
+populateImages();
+setTimeout(()=>selectPlace(0), 500);
+</script>
+</body>
+</html>

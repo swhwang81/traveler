@@ -119,6 +119,22 @@
       background-position: center;
     }
 
+    .chicago::before {
+      background:
+        linear-gradient(to bottom, rgba(17, 24, 39, 0.05), rgba(17, 24, 39, 0.72)),
+        url("https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&w=1200&q=80");
+      background-size: cover;
+      background-position: center;
+    }
+
+    .dc::before {
+      background:
+        linear-gradient(to bottom, rgba(17, 24, 39, 0.05), rgba(17, 24, 39, 0.74)),
+        url("https://images.unsplash.com/photo-1501466044931-62695aada8e9?auto=format&fit=crop&w=1200&q=80");
+      background-size: cover;
+      background-position: center;
+    }
+
     .content {
       position: relative;
       z-index: 1;
@@ -264,11 +280,47 @@
           <div class="button">서부 여행 보기 →</div>
         </div>
       </a>
+
+      <a class="trip-card chicago" href="chicago.html">
+        <div class="content">
+          <div class="badge">Chicago</div>
+          <h2>시카고 1박 2일 여행</h2>
+          <p>
+            Solon에서 출발해 Millennium Park, Cloud Gate, Chicago Riverwalk,
+            Architecture Cruise, Navy Pier까지 보는 짧고 알찬 시카고 일정입니다.
+          </p>
+          <div class="meta">
+            <span class="chip">1 Night 2 Days</span>
+            <span class="chip">Driving Route</span>
+            <span class="chip">Photos</span>
+          </div>
+          <div class="button">시카고 일정 보기 →</div>
+        </div>
+      </a>
+
+
+      <a class="trip-card dc" href="dc.html">
+        <div class="content">
+          <div class="badge">Washington DC</div>
+          <h2>워싱턴 DC 1박 2일 여행</h2>
+          <p>
+            Solon에서 출발해 White House, National Mall, Lincoln Memorial,
+            Smithsonian, United States Capitol까지 보는 역사 중심 DC 일정입니다.
+          </p>
+          <div class="meta">
+            <span class="chip">1 Night 2 Days</span>
+            <span class="chip">Driving Route</span>
+            <span class="chip">Photos</span>
+          </div>
+          <div class="button">워싱턴 DC 일정 보기 →</div>
+        </div>
+      </a>
+
     </section>
 
     <div class="note">
       연결할 때는 같은 폴더 안에 이 파일을 <code>index.html</code>로 두고,
-      뉴욕 일정 파일명을 <code>nyc.html</code>, 서부 여행 일정 파일명을 <code>west.html</code>로 맞추면 됩니다.
+      뉴욕 일정 파일명을 <code>nyc.html</code>, 서부 여행 일정 파일명을 <code>west.html</code>, 시카고 일정 파일명을 <code>chicago.html</code>, 워싱턴 DC 일정 파일명을 <code>dc.html</code>로 맞추면 됩니다.
       파일명이 다르면 위 카드의 <code>href</code> 값만 원하는 파일명으로 바꾸면 됩니다.
     </div>
   </main>
