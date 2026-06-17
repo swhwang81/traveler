@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>미국 서부 여행 7/24–8/6 일정 지도</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://en.wikipedia.org">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --bg:#f4f5f7; --card:#fff; --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+      --accent:#2563eb; --dark:#111827;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; font-family:Arial,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+      background:var(--bg); color:var(--ink);
+    }
+    header {
+      background:linear-gradient(135deg,#111827,#1e3a8a);
+      color:white; padding:24px 28px 20px;
+    }
+    header h1 { margin:0 0 8px; font-size:28px; letter-spacing:-.03em; }
+    header p { margin:0; color:#dbeafe; line-height:1.5; font-size:15px; }
+    .tabs { margin-top:16px; display:flex; flex-wrap:wrap; gap:8px; }
+    .tab {
+      border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:white;
+      padding:8px 10px; border-radius:999px; font-size:13px; cursor:pointer;
+    }
+    .tab.active { background:white; color:#111827; font-weight:800; }
+    .layout { display:grid; grid-template-columns:minmax(520px,52%) 1fr; gap:16px; padding:16px; }
+    .left { display:flex; flex-direction:column; gap:16px; min-width:0; }
+    .card {
+      background:var(--card); border:1px solid var(--line); border-radius:18px;
+      box-shadow:0 8px 22px rgba(17,24,39,.07); overflow:hidden;
+    }
+    .day-head { padding:16px 18px; border-bottom:1px solid var(--line); }
+    .day-head h2 { margin:0 0 6px; font-size:20px; }
+    .day-head p { margin:0; color:var(--muted); line-height:1.5; font-size:14px; }
+    .route-link { display:inline-block; margin-top:10px; color:#0b57d0; font-weight:800; text-decoration:none; font-size:14px; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; }
+    th {
+      text-align:left; padding:10px 12px; color:var(--muted); background:#f9fafb;
+      border-bottom:1px solid var(--line); font-size:12px; white-space:nowrap;
+    }
+    td { padding:12px; border-bottom:1px solid var(--line); vertical-align:top; font-size:14px; line-height:1.45; }
+    tr.place-row { cursor:pointer; }
+    tr.place-row:hover { background:#eff6ff; }
+    tr.place-row.active { background:#dbeafe; outline:2px solid #93c5fd; outline-offset:-2px; }
+    .thumb {
+      width:86px; height:62px; border-radius:12px; object-fit:cover; background:#f3f4f6; border:1px solid var(--line); display:block;
+    }
+    .placeholder {
+      width:86px; height:62px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+      text-align:center; padding:6px; background:linear-gradient(135deg,#e5e7eb,#f9fafb); border:1px solid var(--line); color:var(--muted); font-size:11px;
+    }
+    .time { font-weight:800; white-space:nowrap; }
+    .name { font-weight:800; }
+    .ko { color:var(--muted); font-size:12px; margin-top:3px; }
+    .tag { display:inline-block; padding:3px 7px; border-radius:999px; background:#f3f4f6; font-size:12px; color:#374151; white-space:nowrap; }
+    .desc { color:#4b5563; font-size:13px; }
+    .map-card {
+      position:sticky; top:16px; height:calc(100vh - 32px); display:flex; flex-direction:column;
+      background:white; border:1px solid var(--line); border-radius:18px; overflow:hidden;
+      box-shadow:0 8px 22px rgba(17,24,39,.07);
+    }
+    #map { flex:1; min-height:500px; width:100%; }
+    .info {
+      border-top:1px solid var(--line); padding:14px 16px; display:grid; grid-template-columns:128px 1fr; gap:14px; align-items:start;
+    }
+    #selectedImage { width:128px; height:92px; border-radius:14px; object-fit:cover; background:#f3f4f6; border:1px solid var(--line); }
+    .info h3 { margin:0 0 4px; font-size:18px; }
+    .info p { margin:0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .popup-img { width:170px; height:105px; object-fit:cover; border-radius:10px; margin-bottom:7px; background:#f3f4f6; }
+    .popup-title { font-weight:800; margin-bottom:3px; }
+    .popup-sub { color:#6b7280; font-size:12px; margin-bottom:6px; }
+    .popup-desc { font-size:13px; line-height:1.45; }
+    .hidden { display:none; }
+    @media(max-width:1100px) {
+      .layout { grid-template-columns:1fr; }
+      .map-card { position:relative; top:0; height:68vh; order:-1; }
+    }
+    @media(max-width:720px) {
+      header { padding:22px 18px; }
+      header h1 { font-size:23px; }
+      .layout { padding:10px; }
+      th:nth-child(5), td:nth-child(5) { display:none; }
+      .thumb,.placeholder { width:74px; height:54px; }
+      .info { grid-template-columns:92px 1fr; }
+      #selectedImage { width:92px; height:70px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>미국 서부 여행 7/24–8/6 일정 지도</h1>
+  <p>각 날짜별 일정표, 지도 동선, Google Maps 경로 링크, 장소별 사진을 함께 볼 수 있습니다. 날짜 버튼을 누르면 해당 날짜의 동선만 표시됩니다.</p>
+  <div class="tabs" id="tabs"></div>
+</header>
+
+<main class="layout">
+  <section class="left" id="dayCards"></section>
+  <aside class="map-card">
+    <div id="map"></div>
+    <div class="info">
+      <img id="selectedImage" alt="selected place image">
+      <div>
+        <h3 id="selectedTitle">장소를 클릭해보세요</h3>
+        <p id="selectedText">일정표의 장소를 클릭하면 지도에서 위치와 사진, 설명을 볼 수 있습니다.</p>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script>
+const days = [{"date": "7/24 (금)", "title": "Las Vegas Strip 관광", "routeMode": "driving", "summary": "라스베이거스 스트립 남쪽의 기념품샵에서 시작해 Bellagio, Caesars Palace, Venetian, Sphere까지 이어지는 하루 관광 코스입니다. Fremont Street는 다음 날 그랜드캐니언 이동을 고려해 선택 코스로 둡니다.", "stops": [{"time": "9:30–10:00", "name": "Welcome to Fabulous Las Vegas Sign", "ko": "라스베이거스 웰컴 사인", "lat": 36.082, "lon": -115.1728, "category": "사진", "description": "라스베이거스 대표 인증샷 장소입니다. 아침에 가면 줄이 비교적 짧고 사진 찍기 좋습니다.", "tip": "전용 주차 공간이 있지만, 여름에는 짧게 찍고 이동하는 것이 좋습니다.", "wiki": "Welcome_to_Fabulous_Las_Vegas_sign", "query": "Welcome to Fabulous Las Vegas Sign"}, {"time": "10:15–11:10", "name": "M&M's Las Vegas", "ko": "엠앤엠즈 라스베이거스", "lat": 36.1021, "lon": -115.1722, "category": "기념품샵", "description": "색감이 화려한 M&M's 굿즈 매장입니다. 아이들과 사진 찍기 좋고 간단한 선물도 고르기 좋습니다.", "tip": "Coca-Cola Store와 거의 붙어 있어서 함께 묶는 것이 좋습니다.", "wiki": "M%26M%27s_World", "query": "M&M's Las Vegas"}, {"time": "11:10–11:50", "name": "Coca-Cola Store Las Vegas", "ko": "코카콜라 스토어", "lat": 36.1024, "lon": -115.1723, "category": "기념품샵", "description": "코카콜라 컵, 티셔츠, 키링, 병 디자인 굿즈 등을 볼 수 있는 유명 기념품샵입니다.", "tip": "세계 음료 체험이나 작은 굿즈 쇼핑을 넣기 좋습니다.", "wiki": "Coca-Cola", "query": "Coca-Cola Store Las Vegas"}, {"time": "12:00–12:40", "name": "Hershey's Chocolate World", "ko": "허쉬 초콜릿 월드", "lat": 36.1026, "lon": -115.1747, "category": "기념품샵", "description": "New York-New York 호텔 안에 있는 초콜릿 기념품샵입니다. Hershey's, Reese's 관련 굿즈가 많습니다.", "tip": "M&M's, Coca-Cola Store와 함께 남쪽 스트립 기념품샵 코스로 묶기 좋습니다.", "wiki": "Hershey%27s_Chocolate_World", "query": "Hershey's Chocolate World Las Vegas"}, {"time": "12:40–1:40", "name": "Lunch near New York-New York / Eataly", "ko": "점심: 뉴욕뉴욕 / 이탈리 근처", "lat": 36.1033, "lon": -115.1741, "category": "식사", "description": "New York-New York, Park MGM, Eataly 근처에서 점심을 먹으면 다음 동선으로 이동하기 쉽습니다.", "tip": "더운 시간대라 실내 식사를 추천합니다.", "wiki": "New_York-New_York_Hotel_and_Casino", "query": "New York New York Las Vegas Eataly"}, {"time": "2:00–3:00", "name": "Paris Las Vegas", "ko": "파리스 라스베이거스", "lat": 36.1125, "lon": -115.1707, "category": "호텔 관광", "description": "에펠탑 모형과 파리풍 인테리어가 있는 호텔입니다. 사진 포인트가 많습니다.", "tip": "벨라지오와 가까워서 오후 코스로 연결하기 좋습니다.", "wiki": "Paris_Las_Vegas", "query": "Paris Las Vegas"}, {"time": "3:10–4:10", "name": "Bellagio Conservatory & Botanical Gardens", "ko": "벨라지오 실내 정원", "lat": 36.1132, "lon": -115.1765, "category": "무료 명소", "description": "계절별 장식이 바뀌는 벨라지오의 실내 정원입니다. 무료인데 만족도가 높은 장소입니다.", "tip": "더운 오후 시간대에 실내에서 쉬면서 보기 좋습니다.", "wiki": "Bellagio_(resort)", "query": "Bellagio Conservatory Botanical Gardens"}, {"time": "4:10–4:40", "name": "Fountains of Bellagio", "ko": "벨라지오 분수쇼", "lat": 36.1127, "lon": -115.174, "category": "무료 쇼", "description": "라스베이거스를 대표하는 무료 분수쇼입니다. 낮에도 좋지만 밤에는 더 화려합니다.", "tip": "낮에 한 번 보고, 밤에 시간이 되면 다시 봐도 좋습니다.", "wiki": "Fountains_of_Bellagio", "query": "Fountains of Bellagio"}, {"time": "4:50–6:10", "name": "Caesars Palace / Forum Shops", "ko": "시저스 팰리스 / 포럼샵", "lat": 36.1162, "lon": -115.1745, "category": "호텔·쇼핑", "description": "로마풍 인테리어와 쇼핑몰이 있는 대형 리조트입니다. 실내 구경 코스로 좋습니다.", "tip": "걷는 거리가 길 수 있으니 핵심 구역만 보는 것이 좋습니다.", "wiki": "Caesars_Palace", "query": "Caesars Palace Forum Shops"}, {"time": "6:20–7:30", "name": "The Venetian Las Vegas", "ko": "베네시안 라스베이거스", "lat": 36.1212, "lon": -115.1696, "category": "호텔 관광", "description": "베네치아풍 운하와 실내 거리, 곤돌라 분위기를 볼 수 있는 대표 호텔입니다.", "tip": "저녁 전후 사진이 좋고, 실내라 더위를 피하기 좋습니다.", "wiki": "The_Venetian_Las_Vegas", "query": "The Venetian Las Vegas"}, {"time": "8:30–9:30", "name": "Sphere", "ko": "스피어", "lat": 36.1204, "lon": -115.1615, "category": "야경", "description": "거대한 구형 LED 외관이 인상적인 최신 랜드마크입니다. 공연을 보지 않아도 외관 야경만으로 볼 만합니다.", "tip": "밤에 외관을 보는 것이 가장 좋습니다.", "wiki": "Sphere_(venue)", "query": "Sphere Las Vegas night"}, {"time": "10:00 이후 선택", "name": "Fremont Street Experience", "ko": "프리몬트 스트리트 익스피리언스", "lat": 36.1708, "lon": -115.1443, "category": "선택 야경", "description": "올드 라스베이거스 분위기와 거대한 전광판 쇼를 볼 수 있는 다운타운 명소입니다.", "tip": "다음 날 그랜드캐니언 이동이 있으므로 체력이 남을 때만 추천합니다.", "wiki": "Fremont_Street_Experience", "query": "Fremont Street Experience"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=36.082%2C-115.1728&destination=36.1708%2C-115.1443&waypoints=36.1021%2C-115.1722%7C36.1024%2C-115.1723%7C36.1026%2C-115.1747%7C36.1033%2C-115.1741%7C36.1125%2C-115.1707%7C36.1132%2C-115.1765%7C36.1127%2C-115.174%7C36.1162%2C-115.1745%7C36.1212%2C-115.1696%7C36.1204%2C-115.1615&travelmode=driving"}, {"date": "7/25 (토)", "title": "Las Vegas → Grand Canyon / Tusayan", "routeMode": "driving", "summary": "라스베이거스에서 출발해 그랜드캐니언 사우스림 근처 Tusayan으로 이동하는 날입니다. 도착 시간이 늦으면 Mather Point 일몰만 가볍게 보는 것이 좋습니다.", "stops": [{"time": "오전", "name": "Las Vegas Strip", "ko": "라스베이거스 스트립", "lat": 36.1147, "lon": -115.1728, "category": "출발", "description": "라스베이거스 호텔에서 체크아웃 후 그랜드캐니언 방향으로 출발합니다.", "tip": "출발 전 물, 간식, 차량 연료를 충분히 준비하세요.", "wiki": "Las_Vegas_Strip", "query": "Las Vegas Strip"}, {"time": "점심/휴식", "name": "Kingman, Arizona", "ko": "킹맨", "lat": 35.1894, "lon": -114.053, "category": "중간 휴식", "description": "라스베이거스와 그랜드캐니언 사이에서 쉬어가기 좋은 중간 도시입니다.", "tip": "간단한 식사와 화장실, 주유 휴식 지점으로 좋습니다.", "wiki": "Kingman,_Arizona", "query": "Kingman Arizona Route 66"}, {"time": "오후", "name": "Williams, Arizona", "ko": "윌리엄스", "lat": 35.2495, "lon": -112.191, "category": "중간 휴식", "description": "Route 66 분위기가 남아 있는 작은 도시입니다. Tusayan으로 들어가기 전 마지막 휴식지로 좋습니다.", "tip": "시간이 부족하면 짧게만 들르고 바로 이동하세요.", "wiki": "Williams,_Arizona", "query": "Williams Arizona Route 66"}, {"time": "오후 6:30 예정", "name": "Tusayan", "ko": "투사얀", "lat": 35.9736, "lon": -112.126, "category": "숙박", "description": "그랜드캐니언 사우스림 입구와 가까운 숙박 거점입니다.", "tip": "도착 후 체크인하고 체력이 남으면 Mather Point로 이동하세요.", "wiki": "Tusayan,_Arizona", "query": "Tusayan Arizona"}, {"time": "일몰 선택", "name": "Mather Point", "ko": "매더 포인트", "lat": 36.061, "lon": -112.1094, "category": "전망", "description": "그랜드캐니언 사우스림의 대표 전망대입니다. 첫날 그랜드캐니언을 보기 좋은 장소입니다.", "tip": "일몰 시간대에는 주차와 이동 시간을 여유 있게 잡으세요.", "wiki": "Grand_Canyon", "query": "Mather Point Grand Canyon"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=36.1147%2C-115.1728&destination=36.061%2C-112.1094&waypoints=35.1894%2C-114.053%7C35.2495%2C-112.191%7C35.9736%2C-112.126&travelmode=driving"}, {"date": "7/26 (일)", "title": "Grand Canyon South Rim → Desert View → Page", "routeMode": "driving", "summary": "Tusayan에서 오전 8시에 출발해 South Rim 전망대를 보고 Desert View Drive를 따라 Page로 이동하는 날입니다.", "stops": [{"time": "8:00", "name": "Tusayan", "ko": "투사얀 숙소 출발", "lat": 35.9736, "lon": -112.126, "category": "출발", "description": "숙소에서 출발해 그랜드캐니언 사우스림으로 이동합니다.", "tip": "아침 일찍 움직이면 주차와 혼잡을 줄일 수 있습니다.", "wiki": "Tusayan,_Arizona", "query": "Tusayan Arizona"}, {"time": "오전", "name": "Grand Canyon Visitor Center / Mather Point", "ko": "그랜드캐니언 방문자센터 / 매더 포인트", "lat": 36.0583, "lon": -112.1067, "category": "전망", "description": "그랜드캐니언을 처음 보기 좋은 대표 전망대와 방문자센터 구역입니다.", "tip": "Mather Point, Yavapai Point 정도만 골라보면 시간이 적당합니다.", "wiki": "Grand_Canyon", "query": "Grand Canyon Mather Point"}, {"time": "오전 후반", "name": "Yavapai Point", "ko": "야바파이 포인트", "lat": 36.0657, "lon": -112.1174, "category": "전망", "description": "협곡의 깊이와 넓이를 느끼기 좋은 South Rim 전망대입니다.", "tip": "Mather Point와 비교해서 풍경이 다르게 보입니다.", "wiki": "Yavapai_Point", "query": "Yavapai Point Grand Canyon"}, {"time": "오후", "name": "Desert View Watchtower", "ko": "데저트 뷰 워치타워", "lat": 36.0436, "lon": -111.8262, "category": "전망·건축", "description": "Desert View Drive의 동쪽 대표 지점입니다. 타워와 캐니언 풍경을 함께 볼 수 있습니다.", "tip": "Page로 가는 동선에서 자연스럽게 들르기 좋습니다.", "wiki": "Desert_View_Watchtower", "query": "Desert View Watchtower"}, {"time": "오후 6시 예정", "name": "Page, Arizona", "ko": "페이지", "lat": 36.9147, "lon": -111.4558, "category": "숙박", "description": "Antelope Canyon, Horseshoe Bend, Lake Powell을 보기 좋은 숙박 거점입니다.", "tip": "도착 후 체력이 남으면 Horseshoe Bend 일몰을 선택할 수 있습니다.", "wiki": "Page,_Arizona", "query": "Page Arizona Lake Powell"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=35.9736%2C-112.126&destination=36.9147%2C-111.4558&waypoints=36.0583%2C-112.1067%7C36.0657%2C-112.1174%7C36.0436%2C-111.8262&travelmode=driving"}, {"date": "7/27 (월)", "title": "Page → Antelope Canyon X → Monument Valley", "routeMode": "driving", "summary": "오전 9시 Antelope Canyon X 투어 후 Monument Valley로 이동해 서부 영화 같은 풍경과 일몰을 보는 날입니다.", "stops": [{"time": "8:15", "name": "Hyatt Place Page / Page", "ko": "페이지 숙소", "lat": 36.9147, "lon": -111.4558, "category": "출발", "description": "Antelope Canyon X 투어 시간에 맞춰 Page 숙소에서 출발합니다.", "tip": "투어 체크인 시간을 반드시 확인하세요.", "wiki": "Page,_Arizona", "query": "Page Arizona"}, {"time": "9:00", "name": "Antelope Canyon X by Taadidiin Tours", "ko": "앤텔로프 캐니언 X", "lat": 36.8645, "lon": -111.3743, "category": "투어", "description": "사암 협곡의 빛과 곡선을 볼 수 있는 대표 투어 장소입니다.", "tip": "사진 촬영을 위해 휴대폰/카메라 배터리를 충분히 준비하세요.", "wiki": "Antelope_Canyon", "query": "Antelope Canyon X"}, {"time": "점심 전후 선택", "name": "Horseshoe Bend", "ko": "호스슈 벤드", "lat": 36.8791, "lon": -111.5104, "category": "전망", "description": "콜로라도 강이 말굽 모양으로 휘어지는 대표 전망 포인트입니다.", "tip": "그늘이 거의 없으므로 물과 모자를 준비하세요.", "wiki": "Horseshoe_Bend_(Arizona)", "query": "Horseshoe Bend Arizona"}, {"time": "오후", "name": "Monument Valley Tribal Park Visitor Center", "ko": "모뉴먼트 밸리 방문자센터", "lat": 36.982, "lon": -110.1122, "category": "전망·숙박", "description": "붉은 사암 기둥과 광활한 사막 풍경을 볼 수 있는 Monument Valley의 대표 거점입니다.", "tip": "일몰 시간이 가장 인상적입니다.", "wiki": "Monument_Valley", "query": "Monument Valley Visitor Center"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=36.9147%2C-111.4558&destination=36.982%2C-110.1122&waypoints=36.8645%2C-111.3743%7C36.8791%2C-111.5104&travelmode=driving"}, {"date": "7/28 (화)", "title": "Monument Valley → Las Vegas", "routeMode": "driving", "summary": "Monument Valley에서 라스베이거스로 돌아오는 긴 이동일입니다. 중간에 Page, Kanab, St. George를 휴식 지점으로 활용하는 것이 좋습니다.", "stops": [{"time": "오전", "name": "Monument Valley", "ko": "모뉴먼트 밸리", "lat": 36.982, "lon": -110.1122, "category": "출발", "description": "아침 풍경을 짧게 보고 라스베이거스 방향으로 출발합니다.", "tip": "이날은 긴 이동일이라 늦게 출발하지 않는 것이 좋습니다.", "wiki": "Monument_Valley", "query": "Monument Valley sunrise"}, {"time": "점심/휴식", "name": "Page, Arizona", "ko": "페이지", "lat": 36.9147, "lon": -111.4558, "category": "휴식", "description": "Monument Valley와 라스베이거스 사이의 중간 휴식 후보입니다.", "tip": "주유와 간단한 식사를 하기 좋습니다.", "wiki": "Page,_Arizona", "query": "Page Arizona"}, {"time": "오후", "name": "Kanab, Utah", "ko": "캐납", "lat": 37.0475, "lon": -112.5263, "category": "휴식", "description": "유타 남부의 작은 여행 거점 도시입니다. 라스베이거스 방향 이동 중 쉬어가기 좋습니다.", "tip": "시간이 있으면 간식이나 커피 휴식 정도로 추천합니다.", "wiki": "Kanab,_Utah", "query": "Kanab Utah"}, {"time": "오후 후반", "name": "St. George, Utah", "ko": "세인트 조지", "lat": 37.0965, "lon": -113.5684, "category": "휴식", "description": "라스베이거스 진입 전 큰 도시형 휴식 지점입니다.", "tip": "저녁 전 마지막 주유와 화장실 휴식에 좋습니다.", "wiki": "St._George,_Utah", "query": "St George Utah"}, {"time": "저녁", "name": "Las Vegas", "ko": "라스베이거스", "lat": 36.1147, "lon": -115.1728, "category": "숙박", "description": "긴 이동 후 라스베이거스에 도착해 휴식합니다.", "tip": "이날 밤은 무리하지 말고 다음 날 장거리 운전을 준비하세요.", "wiki": "Las_Vegas_Strip", "query": "Las Vegas Strip night"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=36.982%2C-110.1122&destination=36.1147%2C-115.1728&waypoints=36.9147%2C-111.4558%7C37.0475%2C-112.5263%7C37.0965%2C-113.5684&travelmode=driving"}, {"date": "7/29 (수)", "title": "Las Vegas → Yosemite 방향 이동", "routeMode": "driving", "summary": "가장 힘든 장거리 이동일입니다. 현실적으로는 Mammoth Lakes 또는 Lee Vining 중간 숙박을 권장합니다.", "stops": [{"time": "이른 아침", "name": "Las Vegas", "ko": "라스베이거스 출발", "lat": 36.1147, "lon": -115.1728, "category": "출발", "description": "요세미티 방향으로 장거리 이동을 시작합니다.", "tip": "가급적 오전 6시 이전 출발을 추천합니다.", "wiki": "Las_Vegas_Strip", "query": "Las Vegas"}, {"time": "오전/점심", "name": "Death Valley Junction / Amargosa Area", "ko": "데스밸리 정션 인근", "lat": 36.3022, "lon": -116.4134, "category": "경유", "description": "라스베이거스에서 동부 시에라 방향으로 가는 길목입니다.", "tip": "한여름 데스밸리 내부 관광은 무리하지 않는 것이 좋습니다.", "wiki": "Death_Valley_Junction,_California", "query": "Death Valley Junction"}, {"time": "오후", "name": "Bishop, California", "ko": "비숍", "lat": 37.3614, "lon": -118.3997, "category": "휴식", "description": "동부 시에라 지역의 대표 휴식 도시입니다. 주유와 식사에 좋습니다.", "tip": "요세미티 동쪽으로 올라가기 전 중요한 휴식 지점입니다.", "wiki": "Bishop,_California", "query": "Bishop California"}, {"time": "저녁 권장 숙박", "name": "Mammoth Lakes", "ko": "매머드 레이크스", "lat": 37.6485, "lon": -118.9721, "category": "권장 숙박", "description": "요세미티 동쪽 진입 전 숙박하기 좋은 산악 리조트 도시입니다.", "tip": "가족 여행이라면 이날 Yosemite Valley까지 무리하기보다 이곳이나 Lee Vining 숙박이 안전합니다.", "wiki": "Mammoth_Lakes,_California", "query": "Mammoth Lakes California"}, {"time": "대안 숙박", "name": "Lee Vining", "ko": "리 바이닝", "lat": 37.9576, "lon": -119.1199, "category": "대안 숙박", "description": "Tioga Pass 동쪽 입구와 가까운 작은 마을입니다.", "tip": "다음 날 Tioga Road로 Yosemite에 들어가기 가장 좋은 위치입니다.", "wiki": "Lee_Vining,_California", "query": "Lee Vining California Mono Lake"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=36.1147%2C-115.1728&destination=37.9576%2C-119.1199&waypoints=36.3022%2C-116.4134%7C37.3614%2C-118.3997%7C37.6485%2C-118.9721&travelmode=driving"}, {"date": "7/30 (목)", "title": "Yosemite 관광", "routeMode": "driving", "summary": "Tioga Road를 통해 Yosemite로 들어가 Valley 핵심 전망지와 폭포, 산책 코스를 보는 날입니다.", "stops": [{"time": "아침", "name": "Lee Vining / Tioga Pass Entrance", "ko": "리 바이닝 / 티오가 패스 입구", "lat": 37.9576, "lon": -119.1199, "category": "출발", "description": "요세미티 동쪽 입구로 들어가기 위한 출발 지점입니다.", "tip": "Tioga Road 운영 상태를 출발 전 확인하세요.", "wiki": "Tioga_Pass", "query": "Tioga Pass Yosemite"}, {"time": "오전", "name": "Tenaya Lake", "ko": "테나야 호수", "lat": 37.8316, "lon": -119.4618, "category": "전망", "description": "Tioga Road 구간의 아름다운 고산 호수입니다.", "tip": "짧게 사진 찍고 이동하기 좋습니다.", "wiki": "Tenaya_Lake", "query": "Tenaya Lake Yosemite"}, {"time": "점심 전후", "name": "Olmsted Point", "ko": "옴스테드 포인트", "lat": 37.8107, "lon": -119.4859, "category": "전망", "description": "화강암 지형과 하프돔 방향 전망을 볼 수 있는 포인트입니다.", "tip": "Tioga Road에서 꼭 들를 만한 전망지입니다.", "wiki": "Olmsted_Point", "query": "Olmsted Point Yosemite"}, {"time": "오후", "name": "Tunnel View", "ko": "터널 뷰", "lat": 37.7159, "lon": -119.6775, "category": "전망", "description": "요세미티 밸리의 대표적인 파노라마 전망 포인트입니다.", "tip": "엘 캐피탄, 하프돔, 폭포가 한눈에 들어오는 사진 명소입니다.", "wiki": "Tunnel_View", "query": "Tunnel View Yosemite"}, {"time": "오후 후반", "name": "Yosemite Valley", "ko": "요세미티 밸리", "lat": 37.7456, "lon": -119.5936, "category": "관광", "description": "요세미티의 핵심 지역입니다. 폭포, 초원, 절벽 전망을 볼 수 있습니다.", "tip": "주차 후 셔틀이나 도보를 섞어 이동하는 것이 좋습니다.", "wiki": "Yosemite_Valley", "query": "Yosemite Valley"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=37.9576%2C-119.1199&destination=37.7456%2C-119.5936&waypoints=37.8316%2C-119.4618%7C37.8107%2C-119.4859%7C37.7159%2C-119.6775&travelmode=driving"}, {"date": "7/31 (금)", "title": "Yosemite → San Jose", "routeMode": "driving", "summary": "오전에 요세미티를 조금 더 보고 San Jose로 이동해 휴식하는 날입니다.", "stops": [{"time": "오전", "name": "Yosemite Valley", "ko": "요세미티 밸리", "lat": 37.7456, "lon": -119.5936, "category": "출발", "description": "숙소 위치에 따라 오전에 밸리 산책을 짧게 추가할 수 있습니다.", "tip": "긴 이동 전 무리한 하이킹은 피하는 것이 좋습니다.", "wiki": "Yosemite_Valley", "query": "Yosemite Valley"}, {"time": "오전 선택", "name": "Bridalveil Fall", "ko": "브라이들베일 폭포", "lat": 37.7165, "lon": -119.6504, "category": "폭포", "description": "요세미티의 대표 폭포 중 하나입니다. 접근성이 좋은 편입니다.", "tip": "시간이 부족하면 Tunnel View와 묶어 짧게 보는 정도로 충분합니다.", "wiki": "Bridalveil_Fall", "query": "Bridalveil Fall Yosemite"}, {"time": "점심/휴식", "name": "Merced, California", "ko": "머세드", "lat": 37.3022, "lon": -120.4829, "category": "중간 휴식", "description": "요세미티에서 산호세로 가는 길에 쉬기 좋은 도시입니다.", "tip": "식사, 주유, 화장실 휴식 지점으로 좋습니다.", "wiki": "Merced,_California", "query": "Merced California"}, {"time": "오후/저녁", "name": "San Jose", "ko": "산호세", "lat": 37.3382, "lon": -121.8863, "category": "숙박", "description": "베이 에어리어 남쪽의 중심 도시입니다. 이후 Sunnyvale, Google, San Francisco 일정의 거점입니다.", "tip": "도착 후에는 휴식 중심으로 잡는 것이 좋습니다.", "wiki": "San_Jose,_California", "query": "San Jose California"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=37.7456%2C-119.5936&destination=37.3382%2C-121.8863&waypoints=37.7165%2C-119.6504%7C37.3022%2C-120.4829&travelmode=driving"}, {"date": "8/1 (토)", "title": "San Jose / Sunnyvale / Google Bay View", "routeMode": "driving", "summary": "실리콘밸리 분위기를 보는 날입니다. 오후에는 다엘이네를 만나는 일정으로 여유 있게 잡습니다.", "stops": [{"time": "오전", "name": "San Jose", "ko": "산호세", "lat": 37.3382, "lon": -121.8863, "category": "출발", "description": "베이 에어리어 남쪽에서 하루를 시작합니다.", "tip": "오전 일정은 가볍게 잡는 것이 좋습니다.", "wiki": "San_Jose,_California", "query": "San Jose California"}, {"time": "오전", "name": "Sunnyvale", "ko": "서니베일", "lat": 37.3688, "lon": -122.0363, "category": "도시", "description": "실리콘밸리의 대표 주거·업무 도시 중 하나입니다.", "tip": "카페나 마트, 동네 분위기 보기 좋습니다.", "wiki": "Sunnyvale,_California", "query": "Sunnyvale California"}, {"time": "점심 전후", "name": "Google Bay View", "ko": "구글 베이 뷰", "lat": 37.4269, "lon": -122.08, "category": "건축·회사", "description": "구글의 독특한 건축물로 알려진 Bay View 캠퍼스 주변입니다.", "tip": "방문 가능 구역이 제한될 수 있으므로 외관과 주변 분위기 중심으로 보세요.", "wiki": "Googleplex", "query": "Google Bay View Mountain View"}, {"time": "오후", "name": "Palo Alto / Stanford Area", "ko": "팔로알토 / 스탠퍼드 인근", "lat": 37.4419, "lon": -122.143, "category": "선택", "description": "시간이 남으면 팔로알토나 스탠퍼드 주변 분위기를 볼 수 있습니다.", "tip": "오후 약속 전에 너무 멀리 가지 않는 범위에서 선택하세요.", "wiki": "Palo_Alto,_California", "query": "Palo Alto Stanford"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=37.3382%2C-121.8863&destination=37.4419%2C-122.143&waypoints=37.3688%2C-122.0363%7C37.4269%2C-122.08&travelmode=driving"}, {"date": "8/2 (일)", "title": "San Jose → Church → San Francisco Night View", "routeMode": "driving", "summary": "오전에는 교회 방문과 예배, 오후에는 샌프란시스코로 이동해 야경을 보는 날입니다.", "stops": [{"time": "오전", "name": "San Jose", "ko": "산호세", "lat": 37.3382, "lon": -121.8863, "category": "출발", "description": "산호세에서 하루를 시작해 예배 장소로 이동합니다.", "tip": "예배 시간에 맞춰 여유 있게 이동하세요.", "wiki": "San_Jose,_California", "query": "San Jose California"}, {"time": "오전", "name": "Church Visit / Worship", "ko": "교회 방문 및 예배", "lat": 37.3688, "lon": -122.0363, "category": "예배", "description": "구체적인 교회 위치가 정해지면 지도에 정확히 반영할 수 있습니다. 현재는 베이 에어리어 중간 지점으로 표시했습니다.", "tip": "교회 주소를 주시면 이 지점을 정확히 수정할 수 있습니다.", "wiki": "Sunnyvale,_California", "query": "church Sunnyvale California"}, {"time": "오후", "name": "San Francisco", "ko": "샌프란시스코", "lat": 37.7749, "lon": -122.4194, "category": "이동·숙박", "description": "예배 후 샌프란시스코로 이동해 체크인 또는 시내 산책을 합니다.", "tip": "주차비와 호텔 체크인 시간을 확인하세요.", "wiki": "San_Francisco", "query": "San Francisco skyline"}, {"time": "저녁", "name": "Twin Peaks", "ko": "트윈 픽스", "lat": 37.7544, "lon": -122.4477, "category": "야경", "description": "샌프란시스코 시내를 내려다볼 수 있는 대표 전망지입니다.", "tip": "바람이 강하고 추울 수 있어 겉옷을 준비하세요.", "wiki": "Twin_Peaks_(San_Francisco)", "query": "Twin Peaks San Francisco night"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=37.3382%2C-121.8863&destination=37.7544%2C-122.4477&waypoints=37.3688%2C-122.0363%7C37.7749%2C-122.4194&travelmode=driving"}, {"date": "8/3 (월)", "title": "San Francisco 관광", "routeMode": "driving", "summary": "샌프란시스코의 대표 명소를 보는 날입니다. 주차가 어려운 지역이 많아 대중교통/우버를 섞는 것도 좋습니다.", "stops": [{"time": "오전", "name": "Golden Gate Bridge Vista Point", "ko": "금문교 전망 포인트", "lat": 37.8324, "lon": -122.4797, "category": "전망", "description": "금문교를 대표적으로 볼 수 있는 전망 포인트입니다.", "tip": "아침에 안개가 낄 수 있으니 날씨를 보고 순서를 조정하세요.", "wiki": "Golden_Gate_Bridge", "query": "Golden Gate Bridge Vista Point"}, {"time": "오전 후반", "name": "Palace of Fine Arts", "ko": "팰리스 오브 파인 아츠", "lat": 37.8029, "lon": -122.4484, "category": "건축·사진", "description": "고전적인 돔과 연못이 어우러진 사진 명소입니다.", "tip": "금문교와 피셔맨스 워프 사이에 넣기 좋습니다.", "wiki": "Palace_of_Fine_Arts", "query": "Palace of Fine Arts San Francisco"}, {"time": "점심", "name": "Fisherman's Wharf / Pier 39", "ko": "피셔맨스 워프 / 피어 39", "lat": 37.8087, "lon": -122.4098, "category": "관광·식사", "description": "샌프란시스코의 대표 관광지이자 식사 구역입니다. 바다사자와 해산물 식당이 유명합니다.", "tip": "관광객이 많지만 가족 여행에는 편한 장소입니다.", "wiki": "Fisherman's_Wharf,_San_Francisco", "query": "Fishermans Wharf Pier 39"}, {"time": "오후", "name": "Lombard Street", "ko": "롬바드 스트리트", "lat": 37.8021, "lon": -122.4187, "category": "사진", "description": "구불구불한 길로 유명한 샌프란시스코 대표 사진 명소입니다.", "tip": "차로 통과하거나 아래쪽에서 사진만 찍어도 좋습니다.", "wiki": "Lombard_Street_(San_Francisco)", "query": "Lombard Street San Francisco"}, {"time": "오후 후반", "name": "Painted Ladies / Alamo Square", "ko": "페인티드 레이디스 / 알라모 스퀘어", "lat": 37.7763, "lon": -122.4328, "category": "사진", "description": "빅토리아풍 주택들과 도시 배경이 함께 보이는 사진 명소입니다.", "tip": "짧게 들러 사진 찍기 좋습니다.", "wiki": "Painted_ladies", "query": "Painted Ladies Alamo Square"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=37.8324%2C-122.4797&destination=37.7763%2C-122.4328&waypoints=37.8029%2C-122.4484%7C37.8087%2C-122.4098%7C37.8021%2C-122.4187&travelmode=driving"}, {"date": "8/4 (화)", "title": "San Francisco → SFO → Seattle", "routeMode": "driving", "summary": "샌프란시스코에서 체크아웃 후 렌터카를 반납하고 SFO에서 시애틀로 이동하는 날입니다.", "stops": [{"time": "오전", "name": "San Francisco Hotel", "ko": "샌프란시스코 숙소", "lat": 37.7749, "lon": -122.4194, "category": "출발", "description": "호텔 체크아웃 후 공항으로 이동합니다.", "tip": "렌터카 반납과 항공 체크인을 고려해 충분히 일찍 출발하세요.", "wiki": "San_Francisco", "query": "San Francisco"}, {"time": "비행 전", "name": "San Francisco International Airport", "ko": "샌프란시스코 국제공항 SFO", "lat": 37.6213, "lon": -122.379, "category": "공항", "description": "렌터카 반납 후 SFO-SEA 델타항공 DL1412 탑승 예정입니다.", "tip": "렌터카 반납 장소와 터미널 이동 시간을 확인하세요.", "wiki": "San_Francisco_International_Airport", "query": "San Francisco International Airport"}, {"time": "도착 후", "name": "Seattle-Tacoma International Airport", "ko": "시애틀 타코마 국제공항 SEA", "lat": 47.4502, "lon": -122.3088, "category": "공항", "description": "시애틀 도착 후 다운타운 호텔로 이동합니다.", "tip": "짐이 많으면 우버/택시, 가볍다면 Link Light Rail도 가능합니다.", "wiki": "Seattle–Tacoma_International_Airport", "query": "Seattle Tacoma International Airport"}, {"time": "저녁", "name": "Hilton Garden Inn Seattle Downtown", "ko": "힐튼 가든 인 시애틀 다운타운", "lat": 47.617, "lon": -122.3332, "category": "숙박", "description": "시애틀 다운타운 숙박지입니다. Space Needle과 Pike Place Market 접근이 비교적 좋습니다.", "tip": "체크인 후 주변에서 가볍게 저녁 식사를 추천합니다.", "wiki": "Seattle", "query": "Hilton Garden Inn Seattle Downtown"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=37.7749%2C-122.4194&destination=47.617%2C-122.3332&waypoints=37.6213%2C-122.379%7C47.4502%2C-122.3088&travelmode=driving"}, {"date": "8/5 (수)", "title": "Seattle Day 1: Pike Place / Waterfront / Space Needle", "routeMode": "walking", "summary": "시애틀의 대표 관광지인 Pike Place Market, Waterfront, Space Needle 중심 일정입니다.", "stops": [{"time": "오전", "name": "Pike Place Market", "ko": "파이크 플레이스 마켓", "lat": 47.6097, "lon": -122.3425, "category": "시장", "description": "시애틀 대표 시장입니다. 생선, 베이커리, 커피, 기념품을 볼 수 있습니다.", "tip": "오전에 가면 비교적 보기 좋습니다.", "wiki": "Pike_Place_Market", "query": "Pike Place Market"}, {"time": "오전 후반", "name": "Original Starbucks", "ko": "오리지널 스타벅스", "lat": 47.6101, "lon": -122.3425, "category": "카페·사진", "description": "파이크 플레이스 마켓 근처의 유명 스타벅스 매장입니다.", "tip": "줄이 길면 외관 사진만 찍고 넘어가도 됩니다.", "wiki": "Original_Starbucks", "query": "Original Starbucks Seattle"}, {"time": "점심/오후", "name": "Seattle Waterfront", "ko": "시애틀 워터프런트", "lat": 47.6062, "lon": -122.3425, "category": "산책", "description": "시애틀 바다와 항구 분위기를 느낄 수 있는 산책 구역입니다.", "tip": "점심 식사와 산책을 함께 넣기 좋습니다.", "wiki": "Central_Waterfront,_Seattle", "query": "Seattle Waterfront"}, {"time": "오후", "name": "Space Needle", "ko": "스페이스 니들", "lat": 47.6205, "lon": -122.3493, "category": "전망대", "description": "시애틀을 대표하는 전망대입니다. 도시와 산, 바다를 함께 볼 수 있습니다.", "tip": "날씨가 맑은 날에 올라가는 것이 좋습니다.", "wiki": "Space_Needle", "query": "Space Needle Seattle"}, {"time": "오후 선택", "name": "Chihuly Garden and Glass", "ko": "치훌리 가든 앤 글래스", "lat": 47.6206, "lon": -122.3505, "category": "전시", "description": "유리 예술 작품과 정원을 볼 수 있는 전시 공간입니다. Space Needle 바로 옆입니다.", "tip": "Space Needle과 묶어 보기 좋습니다.", "wiki": "Chihuly_Garden_and_Glass", "query": "Chihuly Garden and Glass"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=47.6097%2C-122.3425&destination=47.6206%2C-122.3505&waypoints=47.6101%2C-122.3425%7C47.6062%2C-122.3425%7C47.6205%2C-122.3493&travelmode=walking"}, {"date": "8/6 (목)", "title": "Seattle Day 2: The Spheres / Capitol Hill / Kerry Park", "routeMode": "driving", "summary": "시애틀의 현대 건축, 커피 문화, 야경을 보는 일정입니다.", "stops": [{"time": "오전", "name": "The Spheres", "ko": "아마존 스피어스", "lat": 47.6156, "lon": -122.3394, "category": "건축", "description": "아마존 본사 주변의 독특한 유리 돔 건축물입니다. 외관만 봐도 인상적입니다.", "tip": "내부 방문 가능 여부는 별도 예약/운영 일정 확인이 필요합니다.", "wiki": "Amazon_Spheres", "query": "Amazon Spheres Seattle"}, {"time": "오전 후반", "name": "Seattle Central Library", "ko": "시애틀 중앙도서관", "lat": 47.6067, "lon": -122.3325, "category": "건축", "description": "현대적인 외관과 내부 구조가 인상적인 도서관입니다.", "tip": "건축에 관심이 있다면 짧게 들르기 좋습니다.", "wiki": "Seattle_Central_Library", "query": "Seattle Central Library"}, {"time": "점심/오후", "name": "Starbucks Reserve Roastery Seattle", "ko": "스타벅스 리저브 로스터리", "lat": 47.6141, "lon": -122.3285, "category": "카페", "description": "스타벅스의 대형 리저브 로스터리입니다. 커피 제조 과정과 다양한 메뉴를 경험할 수 있습니다.", "tip": "기념품도 볼 수 있어 가족 여행 코스로 좋습니다.", "wiki": "Starbucks_Reserve", "query": "Starbucks Reserve Roastery Seattle"}, {"time": "오후", "name": "Capitol Hill", "ko": "캐피톨 힐", "lat": 47.623, "lon": -122.32, "category": "동네 산책", "description": "카페, 서점, 레스토랑, 젊은 분위기가 있는 시애틀의 대표 동네입니다.", "tip": "로스터리와 가까워서 산책 코스로 묶기 좋습니다.", "wiki": "Capitol_Hill,_Seattle", "query": "Capitol Hill Seattle"}, {"time": "저녁", "name": "Kerry Park", "ko": "케리 파크", "lat": 47.6295, "lon": -122.3599, "category": "야경", "description": "스페이스 니들과 시애틀 스카이라인을 함께 볼 수 있는 대표 야경 포인트입니다.", "tip": "해질 무렵부터 야경 시간대까지 추천합니다.", "wiki": "Kerry_Park_(Seattle)", "query": "Kerry Park Seattle"}], "googleMapsUrl": "https://www.google.com/maps/dir/?api=1&origin=47.6156%2C-122.3394&destination=47.6295%2C-122.3599&waypoints=47.6067%2C-122.3325%7C47.6141%2C-122.3285%7C47.623%2C-122.32&travelmode=driving"}];
+const allPlaces = [];
+days.forEach((day, dayIndex) => {
+  day.stops.forEach((stop, stopIndex) => {
+    allPlaces.push({...stop, date:day.date, dayIndex, stopIndex});
+  });
+});
+const imageCache = new Map();
+</script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+function fallbackImage(place) {
+  return `https://source.unsplash.com/320x220/?${encodeURIComponent(place.query || place.name)}`;
+}
+async function loadImage(place, globalIndex) {
+  if (imageCache.has(globalIndex)) return imageCache.get(globalIndex);
+  let url = `https://en.wikipedia.org/api/rest_v1/page/summary/${place.wiki}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("no image");
+    const data = await res.json();
+    const img = data.thumbnail?.source || data.originalimage?.source || fallbackImage(place);
+    imageCache.set(globalIndex, img);
+    return img;
+  } catch(e) {
+    const img = fallbackImage(place);
+    imageCache.set(globalIndex, img);
+    return img;
+  }
+}
+function rowHtml(place, globalIndex) {
+  return `<tr class="place-row" data-index="${globalIndex}" data-day="${place.dayIndex}">
+    <td><div class="placeholder" id="thumbBox-${globalIndex}">${place.category}</div></td>
+    <td class="time">${place.time}</td>
+    <td><div class="name">${place.stopIndex+1}. ${place.name}</div><div class="ko">${place.ko}</div></td>
+    <td><span class="tag">${place.category}</span></td>
+    <td><div class="desc">${place.description}</div></td>
+  </tr>`;
+}
+function buildCards() {
+  const container = document.getElementById("dayCards");
+  container.innerHTML = days.map((day, di) => {
+    const rows = allPlaces.map((p, gi) => p.dayIndex === di ? rowHtml(p, gi) : "").join("");
+    return `<section class="card day-card" data-day-card="${di}">
+      <div class="day-head">
+        <h2>${day.date} · ${day.title}</h2>
+        <p>${day.summary}</p>
+        <a class="route-link" href="${day.googleMapsUrl}" target="_blank">Google Maps에서 이 날짜 경로 열기</a>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>사진</th><th>시간</th><th>장소</th><th>구분</th><th>설명</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </section>`;
+  }).join("");
+}
+function buildTabs() {
+  const tabs = document.getElementById("tabs");
+  tabs.innerHTML = `<button class="tab active" data-day="all">전체</button>` + days.map((d,i)=>`<button class="tab" data-day="${i}">${d.date}</button>`).join("");
+}
+buildCards(); buildTabs();
+
+const map = L.map("map").setView([38.5,-119.8], 5);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom:19, attribution:"&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+const colors = ["#dc2626","#ea580c","#ca8a04","#16a34a","#0891b2","#2563eb","#4f46e5","#7c3aed","#9333ea","#be185d","#0f766e","#334155","#b45309"];
+const markerMap = new Map();
+const polylines = [];
+const allBounds = [];
+
+function markerIcon(place) {
+  const color = colors[place.dayIndex % colors.length];
+  return L.divIcon({
+    className:"",
+    html:`<div style="width:28px;height:28px;border-radius:50%;background:${color};color:white;display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.35);font-size:12px;">${place.dayIndex+1}-${place.stopIndex+1}</div>`,
+    iconSize:[28,28], iconAnchor:[14,14]
+  });
+}
+function popupHtml(place, img) {
+  return `${img ? `<img class="popup-img" src="${img}" alt="${place.name}">` : ""}
+  <div class="popup-title">${place.date} · ${place.stopIndex+1}. ${place.name}</div>
+  <div class="popup-sub">${place.ko} · ${place.time} · ${place.category}</div>
+  <div class="popup-desc">${place.description}<br><br><b>Tip:</b> ${place.tip}</div>`;
+}
+allPlaces.forEach((place, gi) => {
+  const marker = L.marker([place.lat, place.lon], {icon:markerIcon(place)})
+    .addTo(map)
+    .bindPopup(`<div class="popup-title">${place.name}</div><div class="popup-desc">사진을 불러오는 중입니다.</div>`);
+  marker.on("click", () => selectPlace(gi, true));
+  markerMap.set(gi, marker);
+  allBounds.push([place.lat, place.lon]);
+});
+days.forEach((day, di) => {
+  const line = L.polyline(day.stops.map(s => [s.lat, s.lon]), {
+    weight:4, opacity:.82, color:colors[di % colors.length]
+  }).addTo(map);
+  line.dayIndex = di;
+  polylines.push(line);
+});
+map.fitBounds(allBounds, {padding:[40,40]});
+
+async function populateImages() {
+  for (let gi=0; gi<allPlaces.length; gi++) {
+    const p = allPlaces[gi];
+    const img = await loadImage(p, gi);
+    const box = document.getElementById(`thumbBox-${gi}`);
+    if (box) box.outerHTML = `<img class="thumb" id="thumb-${gi}" src="${img}" alt="${p.name}" loading="lazy">`;
+    const marker = markerMap.get(gi);
+    if (marker) marker.setPopupContent(popupHtml(p, img));
+  }
+}
+async function selectPlace(gi, fromMarker=false) {
+  const p = allPlaces[gi];
+  const img = await loadImage(p, gi);
+  document.querySelectorAll(".place-row").forEach(r=>r.classList.remove("active"));
+  const row = document.querySelector(`.place-row[data-index="${gi}"]`);
+  if (row) {
+    row.classList.add("active");
+    if (!fromMarker) row.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+  map.setView([p.lat,p.lon], 12, {animate:true});
+  const marker = markerMap.get(gi);
+  marker.setPopupContent(popupHtml(p,img));
+  marker.openPopup();
+  document.getElementById("selectedImage").src = img;
+  document.getElementById("selectedTitle").textContent = `${p.date} · ${p.name}`;
+  document.getElementById("selectedText").textContent = `${p.ko} · ${p.time} · ${p.description}`;
+}
+document.querySelectorAll(".place-row").forEach(row => {
+  row.addEventListener("click", () => selectPlace(Number(row.dataset.index)));
+});
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const d = btn.dataset.day;
+    document.querySelectorAll(".day-card").forEach(card => {
+      card.classList.toggle("hidden", d !== "all" && card.dataset.dayCard !== d);
+    });
+    allPlaces.forEach((p, gi) => {
+      const show = d === "all" || String(p.dayIndex) === d;
+      const marker = markerMap.get(gi);
+      if (show) marker.addTo(map); else marker.removeFrom(map);
+    });
+    polylines.forEach(line => {
+      const show = d === "all" || String(line.dayIndex) === d;
+      if (show) line.addTo(map); else line.removeFrom(map);
+    });
+    if (d === "all") {
+      map.fitBounds(allBounds, {padding:[40,40]});
+    } else {
+      const b = days[Number(d)].stops.map(s=>[s.lat,s.lon]);
+      map.fitBounds(b, {padding:[40,40]});
+    }
+  });
+});
+populateImages();
+setTimeout(()=>selectPlace(0), 500);
+</script>
+</body>
+</html>

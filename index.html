@@ -3,825 +3,274 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>뉴욕 1·2일차 여행 일정 지도 - 사진 포함</title>
-  <link rel="preconnect" href="https://unpkg.com">
-  <link rel="preconnect" href="https://en.wikipedia.org">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <title>미국 여행 일정 모음</title>
   <style>
     :root {
       --bg: #f4f5f7;
       --card: #ffffff;
-      --ink: #1f2937;
+      --ink: #111827;
       --muted: #6b7280;
       --line: #e5e7eb;
-      --day1: #0f766e;
-      --day2: #7c3aed;
+      --blue: #2563eb;
+      --red: #dc2626;
+      --shadow: 0 18px 45px rgba(17, 24, 39, 0.12);
     }
-    * { box-sizing: border-box; }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
+      min-height: 100vh;
       font-family: Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
       color: var(--ink);
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.18), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(220, 38, 38, 0.16), transparent 34%),
+        var(--bg);
     }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 52px 22px 64px;
+    }
+
     header {
-      background: linear-gradient(135deg, #111827 0%, #374151 100%);
-      color: white;
-      padding: 26px 28px 22px;
+      text-align: center;
+      margin-bottom: 34px;
     }
-    header h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
-      letter-spacing: -0.03em;
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.08);
+      color: #374151;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
-    header p {
+
+    h1 {
       margin: 0;
-      color: #d1d5db;
-      font-size: 15px;
-      line-height: 1.5;
+      font-size: clamp(32px, 5vw, 54px);
+      letter-spacing: -0.06em;
+      line-height: 1.05;
     }
-    .topbar {
+
+    .subtitle {
+      max-width: 720px;
+      margin: 16px auto 0;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+      margin-top: 36px;
+    }
+
+    .trip-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 420px;
+      padding: 28px;
+      border-radius: 28px;
+      background: var(--card);
+      border: 1px solid rgba(229, 231, 235, 0.9);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .trip-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 26px 58px rgba(17, 24, 39, 0.18);
+    }
+
+    .trip-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.95;
+      z-index: 0;
+    }
+
+    .nyc::before {
+      background:
+        linear-gradient(to bottom, rgba(17, 24, 39, 0.06), rgba(17, 24, 39, 0.72)),
+        url("https://images.unsplash.com/photo-1534430480872-3498386e7856?auto=format&fit=crop&w=1200&q=80");
+      background-size: cover;
+      background-position: center;
+    }
+
+    .west::before {
+      background:
+        linear-gradient(to bottom, rgba(17, 24, 39, 0.04), rgba(17, 24, 39, 0.72)),
+        url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80");
+      background-size: cover;
+      background-position: center;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      color: white;
+    }
+
+    .badge {
+      align-self: flex-start;
+      margin-bottom: 14px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      backdrop-filter: blur(8px);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .trip-card h2 {
+      margin: 0 0 10px;
+      font-size: 31px;
+      letter-spacing: -0.045em;
+    }
+
+    .trip-card p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .meta {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
       margin-top: 18px;
     }
-    .topbar a, .tab-btn {
-      border: 1px solid rgba(255,255,255,0.25);
-      background: rgba(255,255,255,0.08);
-      color: white;
-      text-decoration: none;
-      padding: 9px 12px;
+
+    .chip {
+      padding: 7px 10px;
       border-radius: 999px;
-      font-size: 14px;
-      cursor: pointer;
+      background: rgba(255, 255, 255, 0.16);
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 12px;
+      font-weight: 700;
     }
-    .tab-btn.active {
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      align-self: flex-start;
+      margin-top: 22px;
+      padding: 12px 16px;
+      border-radius: 999px;
       background: white;
       color: #111827;
-      font-weight: 700;
-    }
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(480px, 52%) 1fr;
-      gap: 16px;
-      padding: 16px;
-      min-height: calc(100vh - 145px);
-    }
-    .panel {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      min-width: 0;
-    }
-    .summary, .schedule-card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      box-shadow: 0 8px 22px rgba(17, 24, 39, 0.06);
-    }
-    .summary {
-      padding: 18px;
-    }
-    .summary h2 {
-      margin: 0 0 8px;
-      font-size: 19px;
-    }
-    .summary p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.55;
       font-size: 14px;
-    }
-    .schedule-card {
-      overflow: hidden;
-    }
-    .schedule-card h2 {
-      margin: 0;
-      padding: 16px 18px;
-      font-size: 20px;
-      border-bottom: 1px solid var(--line);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-    }
-    .day-label {
-      display: inline-block;
-      font-size: 12px;
-      color: white;
-      padding: 4px 9px;
-      border-radius: 999px;
-      white-space: nowrap;
-    }
-    .day1-bg { background: var(--day1); }
-    .day2-bg { background: var(--day2); }
-    .table-wrap { overflow-x: auto; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th {
-      text-align: left;
-      font-size: 12px;
-      color: var(--muted);
-      background: #f9fafb;
-      border-bottom: 1px solid var(--line);
-      padding: 10px 12px;
-      white-space: nowrap;
-    }
-    td {
-      border-bottom: 1px solid var(--line);
-      padding: 12px;
-      vertical-align: top;
-      font-size: 14px;
-      line-height: 1.45;
-    }
-    tr.place-row {
-      cursor: pointer;
-      transition: background 0.15s ease, transform 0.15s ease;
-    }
-    tr.place-row:hover { background: #f8fafc; }
-    tr.place-row.active {
-      background: #eef2ff;
-      outline: 2px solid #c7d2fe;
-      outline-offset: -2px;
-    }
-    .thumb {
-      width: 86px;
-      height: 62px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #d1d5db, #f3f4f6);
-      object-fit: cover;
-      display: block;
-      border: 1px solid #e5e7eb;
-    }
-    .thumb-placeholder {
-      width: 86px;
-      height: 62px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #e5e7eb, #f9fafb);
-      border: 1px solid #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #6b7280;
-      font-size: 11px;
-      text-align: center;
-      padding: 6px;
-    }
-    .time {
-      color: #111827;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .place-name {
       font-weight: 800;
-      color: #111827;
     }
-    .place-ko {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 3px;
-    }
-    .category {
-      display: inline-block;
-      white-space: nowrap;
-      font-size: 12px;
-      padding: 3px 7px;
-      border-radius: 999px;
-      background: #f3f4f6;
-      color: #374151;
-      margin-bottom: 5px;
-    }
-    .desc {
-      color: #4b5563;
-      font-size: 13px;
-    }
-    .map-card {
-      position: sticky;
-      top: 16px;
-      height: calc(100vh - 32px);
-      background: var(--card);
-      border: 1px solid var(--line);
+
+    .note {
+      margin-top: 26px;
+      padding: 18px 20px;
       border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 8px 22px rgba(17, 24, 39, 0.06);
-      display: flex;
-      flex-direction: column;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(229, 231, 235, 0.9);
+      color: #4b5563;
+      line-height: 1.6;
+      font-size: 14px;
     }
-    #map {
-      flex: 1;
-      min-height: 430px;
-      width: 100%;
-    }
-    .map-info {
-      padding: 14px 16px;
-      border-top: 1px solid var(--line);
-      background: #fff;
-      display: grid;
-      grid-template-columns: 128px 1fr;
-      gap: 14px;
-      align-items: start;
-    }
-    #selectedImage {
-      width: 128px;
-      height: 92px;
-      object-fit: cover;
-      border-radius: 14px;
-      background: #f3f4f6;
-      border: 1px solid #e5e7eb;
-    }
-    .map-info h3 {
-      margin: 0 0 4px;
-      font-size: 17px;
-    }
-    .map-info p {
-      margin: 0;
-      color: var(--muted);
+
+    code {
+      padding: 2px 6px;
+      border-radius: 7px;
+      background: #eef2ff;
+      color: #1e3a8a;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 13px;
-      line-height: 1.5;
     }
-    .popup-title { font-weight: 800; margin-bottom: 3px; }
-    .popup-sub { color: #4b5563; font-size: 12px; margin-bottom: 6px; }
-    .popup-img {
-      width: 160px;
-      height: 100px;
-      object-fit: cover;
-      border-radius: 10px;
-      margin-bottom: 7px;
-      background: #f3f4f6;
-    }
-    .popup-desc { font-size: 13px; line-height: 1.45; }
-    .hidden { display: none; }
-    @media (max-width: 1100px) {
-      .layout { grid-template-columns: 1fr; }
-      .map-card {
-        position: relative;
-        top: 0;
-        height: 68vh;
-        order: -1;
+
+    @media (max-width: 820px) {
+      .grid {
+        grid-template-columns: 1fr;
       }
-    }
-    @media (max-width: 720px) {
-      .layout { padding: 10px; }
-      header { padding: 22px 18px; }
-      header h1 { font-size: 23px; }
-      th:nth-child(4), td:nth-child(4) { display: none; }
-      .thumb, .thumb-placeholder { width: 74px; height: 54px; }
-      .map-info {
-        grid-template-columns: 92px 1fr;
+
+      .trip-card {
+        min-height: 360px;
       }
-      #selectedImage {
-        width: 92px;
-        height: 70px;
+
+      .wrap {
+        padding-top: 36px;
       }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>뉴욕 1·2일차 여행 일정 지도</h1>
-    <p>사진이 포함된 일정표입니다. 장소를 클릭하면 오른쪽 지도에서 위치와 설명, 사진을 확인할 수 있습니다.</p>
-    <div class="topbar">
-      <button class="tab-btn active" data-filter="all">전체 보기</button>
-      <button class="tab-btn" data-filter="1">1일차만 보기</button>
-      <button class="tab-btn" data-filter="2">2일차만 보기</button>
-      <a href="https://www.google.com/maps/dir/?api=1&origin=40.76515%2C-73.98055&destination=40.758%2C-73.9855&waypoints=40.76513%2C-73.97992%7C40.76695%2C-73.97375%7C40.76243%2C-73.97379%7C40.75874%2C-73.97867%7C40.74749%2C-73.98647%7C40.7536%2C-73.98323%7C40.75305%2C-73.9816%7C40.75273%2C-73.97723%7C40.76013%2C-73.97547&travelmode=walking" target="_blank">Google Maps 1일차 경로</a>
-      <a href="https://www.google.com/maps/dir/?api=1&origin=40.70331%2C-73.98955&destination=40.75383%2C-74.00215&waypoints=40.70436%2C-73.99039%7C40.70337%2C-73.99021%7C40.70609%2C-73.99686%7C40.7115%2C-74.01334%7C40.70603%2C-74.00883%7C40.72275%2C-73.9881%7C40.73082%2C-73.99733%7C40.74077%2C-73.99438%7C40.74244%2C-74.00604%7C40.74799%2C-74.00476&travelmode=transit" target="_blank">Google Maps 2일차 경로</a>
-    </div>
-  </header>
+  <main class="wrap">
+    <header>
+      <div class="eyebrow">USA Travel Itinerary</div>
+      <h1>미국 여행 일정 모음</h1>
+      <p class="subtitle">
+        뉴욕 여행 일정과 미국 서부 여행 일정을 한 곳에서 선택해 볼 수 있는 메인 페이지입니다.
+        아래 카드를 클릭하면 각 여행 일정 사이트로 이동합니다.
+      </p>
+    </header>
 
-  <main class="layout">
-    <section class="panel">
-      <div class="summary">
-        <h2>전체 흐름</h2>
-        <p><b>1일차</b>는 카네기 다이너 아침, 센트럴파크, 5번가, 코리아타운 점심, ZARA 쇼핑, 미드타운 건축, 타임스퀘어 야경 중심입니다. <b>2일차</b>는 DUMBO 아침 사진, 베이커리 아침, 베이글 점심, NYU, Marshalls 쇼핑, 첼시마켓, 하이라인, 허드슨야드 흐름입니다.</p>
-      </div>
-
-      <section class="schedule-card day-section" data-day-section="1">
-        <h2>1일차 일정 <span class="day-label day1-bg">Midtown & Central Park</span></h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>사진</th>
-                <th>시간</th>
-                <th>장소</th>
-                <th>구분</th>
-                <th>설명</th>
-              </tr>
-            </thead>
-            <tbody id="day1Rows"></tbody>
-          </table>
+    <section class="grid">
+      <a class="trip-card nyc" href="nyc.html">
+        <div class="content">
+          <div class="badge">New York</div>
+          <h2>뉴욕 1·2일차 여행</h2>
+          <p>
+            DUMBO, Brooklyn Bridge, Wall Street, Central Park, Times Square,
+            High Line, Hudson Yards까지 이어지는 뉴욕 일정입니다.
+          </p>
+          <div class="meta">
+            <span class="chip">2 Days</span>
+            <span class="chip">Map Route</span>
+            <span class="chip">Photo Spots</span>
+          </div>
+          <div class="button">뉴욕 일정 보기 →</div>
         </div>
-      </section>
+      </a>
 
-      <section class="schedule-card day-section" data-day-section="2">
-        <h2>2일차 일정 <span class="day-label day2-bg">DUMBO & High Line</span></h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>사진</th>
-                <th>시간</th>
-                <th>장소</th>
-                <th>구분</th>
-                <th>설명</th>
-              </tr>
-            </thead>
-            <tbody id="day2Rows"></tbody>
-          </table>
+      <a class="trip-card west" href="west.html">
+        <div class="content">
+          <div class="badge">Western USA</div>
+          <h2>미국 서부 7/24–8/6 여행</h2>
+          <p>
+            Las Vegas, Grand Canyon, Page, Monument Valley, Yosemite,
+            San Jose, San Francisco, Seattle까지 이어지는 장거리 서부 여행 일정입니다.
+          </p>
+          <div class="meta">
+            <span class="chip">14 Days</span>
+            <span class="chip">Google Maps</span>
+            <span class="chip">Photos</span>
+          </div>
+          <div class="button">서부 여행 보기 →</div>
         </div>
-      </section>
+      </a>
     </section>
 
-    <aside class="map-card">
-      <div id="map"></div>
-      <div class="map-info">
-        <img id="selectedImage" alt="selected place photo" />
-        <div>
-          <h3 id="selectedTitle">장소를 클릭해보세요</h3>
-          <p id="selectedText">왼쪽 일정표의 각 장소를 클릭하면 지도 위치와 설명이 표시됩니다.</p>
-        </div>
-      </div>
-    </aside>
+    <div class="note">
+      연결할 때는 같은 폴더 안에 이 파일을 <code>index.html</code>로 두고,
+      뉴욕 일정 파일명을 <code>nyc.html</code>, 서부 여행 일정 파일명을 <code>west.html</code>로 맞추면 됩니다.
+      파일명이 다르면 위 카드의 <code>href</code> 값만 원하는 파일명으로 바꾸면 됩니다.
+    </div>
   </main>
-
-  <script>
-    const places = [
-  {
-    "day": 1,
-    "time": "8:00–8:50",
-    "name": "Carnegie Diner & Café",
-    "ko": "카네기 다이너 & 카페",
-    "lat": 40.76515,
-    "lon": -73.98055,
-    "category": "식사",
-    "wiki": "Carnegie_Deli",
-    "fallbackQuery": "New York diner breakfast",
-    "description": "카네기 홀 근처에서 뉴욕식 다이너 아침을 먹기 좋은 장소입니다. 1일차 시작점으로 잡기 좋습니다.",
-    "tip": "팬케이크, 오믈렛, 커피 등으로 여유 있게 시작하기 좋습니다."
-  },
-  {
-    "day": 1,
-    "time": "8:50–9:10",
-    "name": "Carnegie Hall",
-    "ko": "카네기 홀",
-    "lat": 40.76513,
-    "lon": -73.97992,
-    "category": "랜드마크",
-    "wiki": "Carnegie_Hall",
-    "fallbackQuery": "Carnegie Hall New York",
-    "description": "세계적으로 유명한 공연장입니다. 내부 관람이 아니어도 외관 사진만으로 의미가 있습니다.",
-    "tip": "다이너에서 가깝기 때문에 아침 후 짧게 들르기 좋습니다."
-  },
-  {
-    "day": 1,
-    "time": "9:20–10:50",
-    "name": "Central Park South / Gapstow Bridge",
-    "ko": "센트럴파크 남쪽 / 갭스토 브리지",
-    "lat": 40.76695,
-    "lon": -73.97375,
-    "category": "공원",
-    "wiki": "Central_Park",
-    "fallbackQuery": "Central Park New York",
-    "description": "도심 속 거대한 인공 조경 공원입니다. 자연처럼 보이지만 나무, 호수, 산책로가 치밀하게 설계된 공간입니다.",
-    "tip": "The Pond, Gapstow Bridge, The Mall, Bethesda Terrace 순서로 걸으면 좋습니다."
-  },
-  {
-    "day": 1,
-    "time": "11:00–11:30",
-    "name": "Trump Tower",
-    "ko": "트럼프 타워",
-    "lat": 40.76243,
-    "lon": -73.97379,
-    "category": "건축",
-    "wiki": "Trump_Tower",
-    "fallbackQuery": "Trump Tower New York",
-    "description": "5번가에 있는 고층 복합 건물입니다. 황금빛 실내 아트리움과 상업 공간을 짧게 둘러보기 좋습니다.",
-    "tip": "정치적 의미보다는 5번가 상업 건축물로 보면 좋습니다."
-  },
-  {
-    "day": 1,
-    "time": "11:40–12:20",
-    "name": "Rockefeller Center",
-    "ko": "록펠러 센터",
-    "lat": 40.75874,
-    "lon": -73.97867,
-    "category": "건축·랜드마크",
-    "wiki": "Rockefeller_Center",
-    "fallbackQuery": "Rockefeller Center New York",
-    "description": "미드타운의 대표 복합 개발 공간입니다. 선큰 플라자, 스케이트장, 크리스마스 트리 공간으로 유명합니다.",
-    "tip": "Top of the Rock 전망대를 넣고 싶다면 이곳에서 연결하면 됩니다."
-  },
-  {
-    "day": 1,
-    "time": "12:40–1:40",
-    "name": "BCD Tofu House, Koreatown",
-    "ko": "코리아타운 BCD 순두부",
-    "lat": 40.74749,
-    "lon": -73.98647,
-    "category": "식사",
-    "wiki": "Koreatown,_Manhattan",
-    "fallbackQuery": "Koreatown Manhattan Korean food",
-    "description": "뉴욕 코리아타운에서 순두부찌개를 먹을 수 있는 한식 식당입니다. 가족 점심으로 편한 선택입니다.",
-    "tip": "오전 도보 후 따뜻한 한식 점심을 먹기 좋습니다."
-  },
-  {
-    "day": 1,
-    "time": "2:00–2:40",
-    "name": "Bryant Park / New York Public Library",
-    "ko": "브라이언트 파크 / 뉴욕 공립도서관",
-    "lat": 40.7536,
-    "lon": -73.98323,
-    "category": "공원·건축",
-    "wiki": "Bryant_Park",
-    "fallbackQuery": "Bryant Park New York Public Library",
-    "description": "고전적인 도서관 건축과 도심 공원을 함께 볼 수 있는 장소입니다.",
-    "tip": "짧게 쉬면서 사진 찍기 좋습니다."
-  },
-  {
-    "day": 1,
-    "time": "2:50–3:40",
-    "name": "ZARA 5th Ave / 42nd St",
-    "ko": "자라 5번가 / 42번가",
-    "lat": 40.75305,
-    "lon": -73.9816,
-    "category": "쇼핑",
-    "wiki": "Zara_(retailer)",
-    "fallbackQuery": "Zara store New York 5th Avenue",
-    "description": "브라이언트 파크와 뉴욕 공립도서관 근처에 넣기 좋은 쇼핑 코스입니다.",
-    "tip": "쇼핑 시간이 길어지면 Paley Park는 선택 코스로 빼도 됩니다."
-  },
-  {
-    "day": 1,
-    "time": "3:50–4:30",
-    "name": "Grand Central Terminal",
-    "ko": "그랜드 센트럴 터미널",
-    "lat": 40.75273,
-    "lon": -73.97723,
-    "category": "교통·건축",
-    "wiki": "Grand_Central_Terminal",
-    "fallbackQuery": "Grand Central Terminal New York",
-    "description": "뉴욕을 대표하는 교통 건축물입니다. 메인 홀과 천장, 사람들의 흐름을 보는 재미가 있습니다.",
-    "tip": "내부가 넓어 비가 와도 방문하기 좋은 장소입니다."
-  },
-  {
-    "day": 1,
-    "time": "4:50–5:20",
-    "name": "Paley Park",
-    "ko": "팔레이 공원",
-    "lat": 40.76013,
-    "lon": -73.97547,
-    "category": "포켓파크",
-    "wiki": "Paley_Park",
-    "fallbackQuery": "Paley Park New York",
-    "description": "고층 건물 사이의 작은 포켓파크입니다. 인공폭포 소리가 도심 소음을 줄여주는 설계가 인상적입니다.",
-    "tip": "건축·도시공간 답사 관점에서 보면 재미있는 곳입니다."
-  },
-  {
-    "day": 1,
-    "time": "저녁",
-    "name": "Times Square",
-    "ko": "타임스퀘어",
-    "lat": 40.758,
-    "lon": -73.9855,
-    "category": "야경",
-    "wiki": "Times_Square",
-    "fallbackQuery": "Times Square New York night",
-    "description": "뉴욕의 화려한 전광판과 브로드웨이 극장가 분위기를 느낄 수 있는 대표 야경 장소입니다.",
-    "tip": "밤 8시 이후가 가장 화려하지만 사람이 많으니 소지품에 주의하세요."
-  },
-  {
-    "day": 2,
-    "time": "8:00–8:40",
-    "name": "DUMBO Washington Street",
-    "ko": "덤보 워싱턴 스트리트",
-    "lat": 40.70331,
-    "lon": -73.98955,
-    "category": "사진 명소",
-    "wiki": "Dumbo,_Brooklyn",
-    "fallbackQuery": "DUMBO Washington Street Manhattan Bridge",
-    "description": "벽돌 건물 사이로 맨해튼 브릿지가 보이는 대표 사진 포인트입니다. 사람이 적은 아침 시간이 좋습니다.",
-    "tip": "가능하면 오전 8시 전후에 사진을 먼저 찍는 것이 좋습니다."
-  },
-  {
-    "day": 2,
-    "time": "8:40–9:10",
-    "name": "Brooklyn Bridge Park / Pebble Beach",
-    "ko": "브루클린 브리지 파크 / 페블 비치",
-    "lat": 40.70436,
-    "lon": -73.99039,
-    "category": "전망",
-    "wiki": "Brooklyn_Bridge_Park",
-    "fallbackQuery": "Brooklyn Bridge Park Pebble Beach",
-    "description": "맨해튼 스카이라인과 브루클린 브릿지를 함께 볼 수 있는 강변 공원입니다.",
-    "tip": "DUMBO 사진 후 바로 이어서 걷기 좋습니다."
-  },
-  {
-    "day": 2,
-    "time": "9:10–9:50",
-    "name": "Almondine Bakery",
-    "ko": "알몬딘 베이커리",
-    "lat": 40.70337,
-    "lon": -73.99021,
-    "category": "아침",
-    "wiki": "Bakery",
-    "fallbackQuery": "Almondine Bakery DUMBO Brooklyn",
-    "description": "DUMBO 근처에서 크루아상, 페이스트리, 커피를 가볍게 먹기 좋은 베이커리 카페입니다.",
-    "tip": "사진 촬영 후 아침 식사 장소로 가장 자연스럽습니다."
-  },
-  {
-    "day": 2,
-    "time": "10:00–10:50",
-    "name": "Brooklyn Bridge Walkway",
-    "ko": "브루클린 브릿지 보행로",
-    "lat": 40.70609,
-    "lon": -73.99686,
-    "category": "산책",
-    "wiki": "Brooklyn_Bridge",
-    "fallbackQuery": "Brooklyn Bridge walkway New York",
-    "description": "1883년에 개통된 뉴욕의 상징적인 다리입니다. 보행자 도로에서 맨해튼 방향 전망을 볼 수 있습니다.",
-    "tip": "전부 건너지 않아도 중간 정도만 걸어도 사진이 좋습니다."
-  },
-  {
-    "day": 2,
-    "time": "11:10–11:50",
-    "name": "9/11 Memorial",
-    "ko": "9·11 메모리얼",
-    "lat": 40.7115,
-    "lon": -74.01334,
-    "category": "역사",
-    "wiki": "National_September_11_Memorial_%26_Museum",
-    "fallbackQuery": "9/11 Memorial New York",
-    "description": "현대 뉴욕의 비극과 재건을 기억하는 장소입니다. 월스트리트와 함께 묶기 좋습니다.",
-    "tip": "차분한 분위기의 장소라 일정 중간에 너무 급하게 보지 않는 것이 좋습니다."
-  },
-  {
-    "day": 2,
-    "time": "11:50–12:10",
-    "name": "Wall Street",
-    "ko": "월스트리트",
-    "lat": 40.70603,
-    "lon": -74.00883,
-    "category": "금융·역사",
-    "wiki": "Wall_Street",
-    "fallbackQuery": "Wall Street New York",
-    "description": "뉴욕 금융의 중심지입니다. 네덜란드 정착지의 담장 역사와 금융 제도의 발달을 함께 생각해볼 수 있습니다.",
-    "tip": "짧게 사진을 찍고 다음 식사 장소로 이동하면 됩니다."
-  },
-  {
-    "day": 2,
-    "time": "12:30–1:20",
-    "name": "Russ & Daughters",
-    "ko": "러스 앤 도터스",
-    "lat": 40.72275,
-    "lon": -73.9881,
-    "category": "점심",
-    "wiki": "Russ_%26_Daughters",
-    "fallbackQuery": "Russ and Daughters New York bagel",
-    "description": "뉴욕식 베이글과 훈제 연어 문화를 대표하는 유대계 식료품점입니다.",
-    "tip": "점심 베이글 코스로 가장 의미 있는 선택입니다."
-  },
-  {
-    "day": 2,
-    "time": "1:40–2:30",
-    "name": "Washington Square Park / NYU",
-    "ko": "워싱턴 스퀘어 파크 / NYU",
-    "lat": 40.73082,
-    "lon": -73.99733,
-    "category": "공원·대학",
-    "wiki": "Washington_Square_Park",
-    "fallbackQuery": "Washington Square Park NYU",
-    "description": "NYU 학생들이 캠퍼스처럼 사용하는 공원입니다. 조지 워싱턴 아치와 거리 공연 분위기가 특징입니다.",
-    "tip": "그리니치 빌리지 산책과 함께 묶으면 좋습니다."
-  },
-  {
-    "day": 2,
-    "time": "2:40–3:30",
-    "name": "Marshalls 6th Ave",
-    "ko": "마샬스 6번가",
-    "lat": 40.74077,
-    "lon": -73.99438,
-    "category": "쇼핑",
-    "wiki": "Marshalls",
-    "fallbackQuery": "Marshalls 6th Avenue New York",
-    "description": "할인 의류, 가방, 신발, 생활용품을 볼 수 있는 오프프라이스 매장입니다. NYU와 Chelsea Market 사이에 넣기 좋습니다.",
-    "tip": "40–50분 정도만 잡으면 다음 일정으로 넘어가기 좋습니다."
-  },
-  {
-    "day": 2,
-    "time": "3:40–4:20",
-    "name": "Chelsea Market",
-    "ko": "첼시 마켓",
-    "lat": 40.74244,
-    "lon": -74.00604,
-    "category": "휴식·간식",
-    "wiki": "Chelsea_Market",
-    "fallbackQuery": "Chelsea Market New York",
-    "description": "옛 공장·창고 분위기를 살린 실내 마켓입니다. 음식, 커피, 화장실 휴식 장소로 좋습니다.",
-    "tip": "High Line으로 올라가기 전 쉬기 좋은 지점입니다."
-  },
-  {
-    "day": 2,
-    "time": "4:20–5:20",
-    "name": "The High Line",
-    "ko": "하이라인",
-    "lat": 40.74799,
-    "lon": -74.00476,
-    "category": "도시재생 공원",
-    "wiki": "High_Line",
-    "fallbackQuery": "High Line New York",
-    "description": "옛 고가 화물철도를 공원으로 바꾼 도시재생 공간입니다. 자동차가 보이지 않는 보행자 중심 산책로입니다.",
-    "tip": "첼시 마켓에서 올라가 허드슨 야드 방향으로 걷는 동선이 좋습니다."
-  },
-  {
-    "day": 2,
-    "time": "5:20–6:30",
-    "name": "Hudson Yards / Vessel",
-    "ko": "허드슨 야드 / 베슬",
-    "lat": 40.75383,
-    "lon": -74.00215,
-    "category": "도시개발·랜드마크",
-    "wiki": "Hudson_Yards,_Manhattan",
-    "fallbackQuery": "Hudson Yards Vessel New York",
-    "description": "기차 기지 위에 인공 지반을 만들고 조성한 대규모 복합 개발 단지입니다. Vessel은 벌집 모양 구조물로 유명합니다.",
-    "tip": "High Line을 따라 북쪽으로 걸으면 자연스럽게 도착합니다."
-  }
-];
-    const day1 = places.filter(p => p.day === 1);
-    const day2 = places.filter(p => p.day === 2);
-    const imageCache = new Map();
-  </script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script>
-    function fallbackImage(place) {
-      const q = encodeURIComponent(place.fallbackQuery || place.name);
-      return `https://source.unsplash.com/320x220/?${q}`;
-    }
-
-    async function loadWikiImage(place, index) {
-      if (imageCache.has(index)) return imageCache.get(index);
-
-      const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${place.wiki}`;
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('No image');
-        const data = await res.json();
-        const image = data.thumbnail?.source || data.originalimage?.source || fallbackImage(place);
-        imageCache.set(index, image);
-        return image;
-      } catch (e) {
-        const image = fallbackImage(place);
-        imageCache.set(index, image);
-        return image;
-      }
-    }
-
-    function categoryIcon(category) {
-      if (category.includes('식사') || category.includes('아침') || category.includes('점심')) return 'Food';
-      if (category.includes('쇼핑')) return 'Shop';
-      if (category.includes('공원')) return 'Park';
-      if (category.includes('야경')) return 'Night';
-      if (category.includes('역사')) return 'History';
-      return 'Place';
-    }
-
-    function popupHtml(place, imageUrl) {
-      return `
-        ${imageUrl ? `<img class="popup-img" src="${imageUrl}" alt="${place.name}">` : ''}
-        <div class="popup-title">${place.name}</div>
-        <div class="popup-sub">${place.ko} · Day ${place.day} · ${place.time}</div>
-        <div class="popup-desc">${place.description}<br><br><b>Tip:</b> ${place.tip}</div>
-      `;
-    }
-
-    const map = L.map('map').setView([40.742, -73.990], 12);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    const markerMap = new Map();
-    const bounds = [];
-
-    function markerIcon(day) {
-      const color = day === 1 ? '#0f766e' : '#7c3aed';
-      return L.divIcon({
-        className: '',
-        html: `<div style="width:24px;height:24px;border-radius:50%;background:${color};color:white;display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">${day}</div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 12]
-      });
-    }
-
-    places.forEach((place, index) => {
-      const marker = L.marker([place.lat, place.lon], { icon: markerIcon(place.day) })
-        .addTo(map)
-        .bindPopup(`<div class="popup-title">${place.name}</div><div class="popup-desc">사진을 불러오는 중입니다.</div>`);
-      marker.on('click', () => selectPlace(index, true));
-      markerMap.set(index, marker);
-      bounds.push([place.lat, place.lon]);
-    });
-
-    const day1Line = L.polyline(day1.map(p => [p.lat, p.lon]), {
-      weight: 4, opacity: 0.75, color: '#0f766e'
-    }).addTo(map);
-
-    const day2Line = L.polyline(day2.map(p => [p.lat, p.lon]), {
-      weight: 4, opacity: 0.75, color: '#7c3aed'
-    }).addTo(map);
-
-    map.fitBounds(bounds, { padding: [35, 35] });
-
-    function rowHtml(place, index) {
-      return `
-        <tr class="place-row" data-index="${index}" data-day="${place.day}">
-          <td>
-            <div class="thumb-placeholder" id="thumbBox-${index}">${categoryIcon(place.category)}</div>
-          </td>
-          <td class="time">${place.time}</td>
-          <td>
-            <div class="place-name">${place.name}</div>
-            <div class="place-ko">${place.ko}</div>
-          </td>
-          <td><span class="category">${place.category}</span></td>
-          <td><div class="desc">${place.description}</div></td>
-        </tr>
-      `;
-    }
-
-    document.getElementById('day1Rows').innerHTML = places
-      .map((p, i) => p.day === 1 ? rowHtml(p, i) : '')
-      .join('');
-
-    document.getElementById('day2Rows').innerHTML = places
-      .map((p, i) => p.day === 2 ? rowHtml(p, i) : '')
-      .join('');
-
-    async function populateImages() {
-      for (let i = 0; i < places.length; i++) {
-        const place = places[i];
-        const imageUrl = await loadWikiImage(place, i);
-        const box = document.getElementById(`thumbBox-${i}`);
-        if (box) {
-          box.outerHTML = `<img class="thumb" id="thumb-${i}" src="${imageUrl}" alt="${place.name}" loading="lazy">`;
-        }
-        const marker = markerMap.get(i);
-        if (marker) marker.setPopupContent(popupHtml(place, imageUrl));
-      }
-    }
-
-    async function selectPlace(index, fromMarker=false) {
-      const place = places[index];
-      const marker = markerMap.get(index);
-      const imageUrl = await loadWikiImage(place, index);
-
-      document.querySelectorAll('.place-row').forEach(row => row.classList.remove('active'));
-      const row = document.querySelector(`.place-row[data-index="${index}"]`);
-      if (row) {
-        row.classList.add('active');
-        if (!fromMarker) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-
-      map.setView([place.lat, place.lon], 16, { animate: true });
-      marker.setPopupContent(popupHtml(place, imageUrl));
-      marker.openPopup();
-
-      document.getElementById('selectedImage').src = imageUrl;
-      document.getElementById('selectedTitle').textContent = `${place.name}`;
-      document.getElementById('selectedText').textContent = `${place.ko} · ${place.time} · ${place.description}`;
-    }
-
-    document.querySelectorAll('.place-row').forEach(row => {
-      row.addEventListener('click', () => selectPlace(Number(row.dataset.index)));
-    });
-
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const filter = btn.dataset.filter;
-        document.querySelectorAll('.day-section').forEach(section => {
-          const day = section.dataset.daySection;
-          section.classList.toggle('hidden', filter !== 'all' && filter !== day);
-        });
-
-        if (filter === '1') {
-          map.fitBounds(day1.map(p => [p.lat, p.lon]), { padding: [35, 35] });
-        } else if (filter === '2') {
-          map.fitBounds(day2.map(p => [p.lat, p.lon]), { padding: [35, 35] });
-        } else {
-          map.fitBounds(bounds, { padding: [35, 35] });
-        }
-      });
-    });
-
-    populateImages();
-    setTimeout(() => selectPlace(0), 500);
-  </script>
 </body>
 </html>
