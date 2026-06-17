@@ -253,6 +253,18 @@
       background: #f3f4f6;
     }
     .popup-desc { font-size: 13px; line-height: 1.45; }
+    .popup-map-link {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #111827;
+      color: #ffffff !important;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .popup-map-link:hover { background: #374151; }
     .hidden { display: none; }
     @media (max-width: 1100px) {
       .layout { grid-template-columns: 1fr; }
@@ -688,12 +700,18 @@
       return 'Place';
     }
 
+    function googleMapsUrl(place) {
+      const query = encodeURIComponent(`${place.lat},${place.lon}`);
+      return `https://www.google.com/maps/search/?api=1&query=${query}`;
+    }
+
     function popupHtml(place, imageUrl) {
       return `
         ${imageUrl ? `<img class="popup-img" src="${imageUrl}" alt="${place.name}">` : ''}
         <div class="popup-title">${place.name}</div>
         <div class="popup-sub">${place.ko} · Day ${place.day} · ${place.time}</div>
         <div class="popup-desc">${place.description}<br><br><b>Tip:</b> ${place.tip}</div>
+        <a class="popup-map-link" href="${googleMapsUrl(place)}" target="_blank" rel="noopener noreferrer">Google Maps에서 열기</a>
       `;
     }
 
