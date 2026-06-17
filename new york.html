@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>뉴욕 1·2일차 여행 일정 지도</title>
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #111827;
+      --accent2: #2563eb;
+      --day1: #0f766e;
+      --day2: #7c3aed;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    header {
+      background: linear-gradient(135deg, #111827 0%, #374151 100%);
+      color: white;
+      padding: 26px 28px 22px;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+    }
+
+    header p {
+      margin: 0;
+      color: #d1d5db;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .topbar a, .tab-btn {
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.08);
+      color: white;
+      text-decoration: none;
+      padding: 9px 12px;
+      border-radius: 999px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: white;
+      color: #111827;
+      font-weight: 700;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(420px, 48%) 1fr;
+      gap: 16px;
+      padding: 16px;
+      min-height: calc(100vh - 145px);
+    }
+
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .summary {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 8px 22px rgba(17, 24, 39, 0.06);
+    }
+
+    .summary h2 {
+      margin: 0 0 8px;
+      font-size: 19px;
+    }
+
+    .summary p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    .schedule-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 8px 22px rgba(17, 24, 39, 0.06);
+    }
+
+    .schedule-card h2 {
+      margin: 0;
+      padding: 16px 18px;
+      font-size: 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .day-label {
+      display: inline-block;
+      font-size: 12px;
+      color: white;
+      padding: 4px 9px;
+      border-radius: 999px;
+    }
+
+    .day1-bg { background: var(--day1); }
+    .day2-bg { background: var(--day2); }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      text-align: left;
+      font-size: 12px;
+      color: var(--muted);
+      background: #f9fafb;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      white-space: nowrap;
+    }
+
+    td {
+      border-bottom: 1px solid var(--line);
+      padding: 12px;
+      vertical-align: top;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    tr.place-row {
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    tr.place-row:hover {
+      background: #f8fafc;
+    }
+
+    tr.place-row.active {
+      background: #eef2ff;
+      outline: 2px solid #c7d2fe;
+      outline-offset: -2px;
+    }
+
+    .time {
+      color: #111827;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .place-name {
+      font-weight: 800;
+      color: #111827;
+    }
+
+    .place-ko {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    .category {
+      display: inline-block;
+      white-space: nowrap;
+      font-size: 12px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #374151;
+      margin-bottom: 5px;
+    }
+
+    .desc {
+      color: #4b5563;
+      font-size: 13px;
+    }
+
+    .map-card {
+      position: sticky;
+      top: 16px;
+      height: calc(100vh - 32px);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 8px 22px rgba(17, 24, 39, 0.06);
+      display: flex;
+      flex-direction: column;
+    }
+
+    #map {
+      flex: 1;
+      min-height: 480px;
+      width: 100%;
+    }
+
+    .map-info {
+      padding: 14px 16px;
+      border-top: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .map-info h3 {
+      margin: 0 0 4px;
+      font-size: 17px;
+    }
+
+    .map-info p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .popup-title {
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+
+    .popup-sub {
+      color: #4b5563;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .popup-desc {
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .map-card {
+        position: relative;
+        top: 0;
+        height: 65vh;
+        order: -1;
+      }
+      header h1 {
+        font-size: 24px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .layout {
+        padding: 10px;
+      }
+      header {
+        padding: 22px 18px;
+      }
+      td:nth-child(4), th:nth-child(4) {
+        display: none;
+      }
+      .map-card {
+        height: 58vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>뉴욕 1·2일차 여행 일정 지도</h1>
+    <p>일정표에서 장소를 클릭하면 오른쪽 지도에서 위치와 설명을 바로 확인할 수 있습니다.</p>
+    <div class="topbar">
+      <button class="tab-btn active" data-filter="all">전체 보기</button>
+      <button class="tab-btn" data-filter="1">1일차만 보기</button>
+      <button class="tab-btn" data-filter="2">2일차만 보기</button>
+      <a href="https://www.google.com/maps/dir/?api=1&origin=40.76515%2C-73.98055&destination=40.758%2C-73.9855&waypoints=40.76513%2C-73.97992%7C40.76695%2C-73.97375%7C40.76243%2C-73.97379%7C40.75874%2C-73.97867%7C40.74749%2C-73.98647%7C40.7536%2C-73.98323%7C40.75273%2C-73.97723%7C40.76013%2C-73.97547&travelmode=walking" target="_blank">Google Maps 1일차 경로</a>
+      <a href="https://www.google.com/maps/dir/?api=1&origin=40.70331%2C-73.98955&destination=40.75383%2C-74.00215&waypoints=40.70436%2C-73.99039%7C40.70337%2C-73.99021%7C40.70609%2C-73.99686%7C40.7115%2C-74.01334%7C40.70603%2C-74.00883%7C40.72275%2C-73.9881%7C40.73082%2C-73.99733%7C40.74244%2C-74.00604%7C40.74799%2C-74.00476&travelmode=transit" target="_blank">Google Maps 2일차 경로</a>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <div class="summary">
+        <h2>전체 흐름</h2>
+        <p><b>1일차</b>는 카네기 다이너 아침, 센트럴파크, 5번가, 코리아타운 점심, 미드타운 건축, 타임스퀘어 야경 중심입니다. <b>2일차</b>는 DUMBO 아침 사진, 베이커리 아침, 베이글 점심, NYU, 첼시마켓, 하이라인, 허드슨야드 흐름입니다.</p>
+      </div>
+
+      <section class="schedule-card day-section" data-day-section="1">
+        <h2>1일차 일정 <span class="day-label day1-bg">Midtown & Central Park</span></h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>시간</th>
+                <th>장소</th>
+                <th>구분</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody id="day1Rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="schedule-card day-section" data-day-section="2">
+        <h2>2일차 일정 <span class="day-label day2-bg">DUMBO & High Line</span></h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>시간</th>
+                <th>장소</th>
+                <th>구분</th>
+                <th>설명</th>
+              </tr>
+            </thead>
+            <tbody id="day2Rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <aside class="map-card">
+      <div id="map"></div>
+      <div class="map-info">
+        <h3 id="selectedTitle">장소를 클릭해보세요</h3>
+        <p id="selectedText">왼쪽 일정표의 각 장소를 클릭하면 지도 위치와 설명이 표시됩니다.</p>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const places = [
+  {
+    "day": 1,
+    "time": "8:00–8:50",
+    "name": "Carnegie Diner & Café",
+    "ko": "카네기 다이너 & 카페",
+    "lat": 40.76515,
+    "lon": -73.98055,
+    "category": "식사",
+    "description": "카네기 홀 근처에서 뉴욕식 다이너 아침을 먹기 좋은 장소입니다. 1일차 시작점으로 잡기 좋습니다.",
+    "tip": "팬케이크, 오믈렛, 커피 등으로 여유 있게 시작하기 좋습니다."
+  },
+  {
+    "day": 1,
+    "time": "8:50–9:10",
+    "name": "Carnegie Hall",
+    "ko": "카네기 홀",
+    "lat": 40.76513,
+    "lon": -73.97992,
+    "category": "랜드마크",
+    "description": "세계적으로 유명한 공연장입니다. 내부 관람이 아니어도 외관 사진만으로 의미가 있습니다.",
+    "tip": "다이너에서 가깝기 때문에 아침 후 짧게 들르기 좋습니다."
+  },
+  {
+    "day": 1,
+    "time": "9:20–10:50",
+    "name": "Central Park South / Gapstow Bridge",
+    "ko": "센트럴파크 남쪽 / 갭스토 브리지",
+    "lat": 40.76695,
+    "lon": -73.97375,
+    "category": "공원",
+    "description": "도심 속 거대한 인공 조경 공원입니다. 자연처럼 보이지만 나무, 호수, 산책로가 치밀하게 설계된 공간입니다.",
+    "tip": "The Pond, Gapstow Bridge, The Mall, Bethesda Terrace 순서로 걸으면 좋습니다."
+  },
+  {
+    "day": 1,
+    "time": "11:00–11:30",
+    "name": "Trump Tower",
+    "ko": "트럼프 타워",
+    "lat": 40.76243,
+    "lon": -73.97379,
+    "category": "건축",
+    "description": "5번가에 있는 고층 복합 건물입니다. 황금빛 실내 아트리움과 상업 공간을 짧게 둘러보기 좋습니다.",
+    "tip": "정치적 의미보다는 5번가 상업 건축물로 보면 좋습니다."
+  },
+  {
+    "day": 1,
+    "time": "11:40–12:20",
+    "name": "Rockefeller Center",
+    "ko": "록펠러 센터",
+    "lat": 40.75874,
+    "lon": -73.97867,
+    "category": "건축·랜드마크",
+    "description": "미드타운의 대표 복합 개발 공간입니다. 선큰 플라자, 스케이트장, 크리스마스 트리 공간으로 유명합니다.",
+    "tip": "Top of the Rock 전망대를 넣고 싶다면 이곳에서 연결하면 됩니다."
+  },
+  {
+    "day": 1,
+    "time": "12:40–1:40",
+    "name": "BCD Tofu House, Koreatown",
+    "ko": "코리아타운 BCD 순두부",
+    "lat": 40.74749,
+    "lon": -73.98647,
+    "category": "식사",
+    "description": "뉴욕 코리아타운에서 순두부찌개를 먹을 수 있는 한식 식당입니다. 가족 점심으로 편한 선택입니다.",
+    "tip": "오전 도보 후 따뜻한 한식 점심을 먹기 좋습니다."
+  },
+  {
+    "day": 1,
+    "time": "2:00–2:40",
+    "name": "Bryant Park / New York Public Library",
+    "ko": "브라이언트 파크 / 뉴욕 공립도서관",
+    "lat": 40.7536,
+    "lon": -73.98323,
+    "category": "공원·건축",
+    "description": "고전적인 도서관 건축과 도심 공원을 함께 볼 수 있는 장소입니다.",
+    "tip": "짧게 쉬면서 사진 찍기 좋습니다."
+  },
+  {
+    "day": 1,
+    "time": "3:00–3:40",
+    "name": "Grand Central Terminal",
+    "ko": "그랜드 센트럴 터미널",
+    "lat": 40.75273,
+    "lon": -73.97723,
+    "category": "교통·건축",
+    "description": "뉴욕을 대표하는 교통 건축물입니다. 메인 홀과 천장, 사람들의 흐름을 보는 재미가 있습니다.",
+    "tip": "내부가 넓어 비가 와도 방문하기 좋은 장소입니다."
+  },
+  {
+    "day": 1,
+    "time": "4:00–4:30",
+    "name": "Paley Park",
+    "ko": "팔레이 공원",
+    "lat": 40.76013,
+    "lon": -73.97547,
+    "category": "포켓파크",
+    "description": "고층 건물 사이의 작은 포켓파크입니다. 인공폭포 소리가 도심 소음을 줄여주는 설계가 인상적입니다.",
+    "tip": "건축·도시공간 답사 관점에서 보면 재미있는 곳입니다."
+  },
+  {
+    "day": 1,
+    "time": "저녁",
+    "name": "Times Square",
+    "ko": "타임스퀘어",
+    "lat": 40.758,
+    "lon": -73.9855,
+    "category": "야경",
+    "description": "뉴욕의 화려한 전광판과 브로드웨이 극장가 분위기를 느낄 수 있는 대표 야경 장소입니다.",
+    "tip": "밤 8시 이후가 가장 화려하지만 사람이 많으니 소지품에 주의하세요."
+  },
+  {
+    "day": 2,
+    "time": "8:00–8:40",
+    "name": "DUMBO Washington Street",
+    "ko": "덤보 워싱턴 스트리트",
+    "lat": 40.70331,
+    "lon": -73.98955,
+    "category": "사진 명소",
+    "description": "벽돌 건물 사이로 맨해튼 브릿지가 보이는 대표 사진 포인트입니다. 사람이 적은 아침 시간이 좋습니다.",
+    "tip": "가능하면 오전 8시 전후에 사진을 먼저 찍는 것이 좋습니다."
+  },
+  {
+    "day": 2,
+    "time": "8:40–9:10",
+    "name": "Brooklyn Bridge Park / Pebble Beach",
+    "ko": "브루클린 브리지 파크 / 페블 비치",
+    "lat": 40.70436,
+    "lon": -73.99039,
+    "category": "전망",
+    "description": "맨해튼 스카이라인과 브루클린 브릿지를 함께 볼 수 있는 강변 공원입니다.",
+    "tip": "DUMBO 사진 후 바로 이어서 걷기 좋습니다."
+  },
+  {
+    "day": 2,
+    "time": "9:10–9:50",
+    "name": "Almondine Bakery",
+    "ko": "알몬딘 베이커리",
+    "lat": 40.70337,
+    "lon": -73.99021,
+    "category": "아침",
+    "description": "DUMBO 근처에서 크루아상, 페이스트리, 커피를 가볍게 먹기 좋은 베이커리 카페입니다.",
+    "tip": "사진 촬영 후 아침 식사 장소로 가장 자연스럽습니다."
+  },
+  {
+    "day": 2,
+    "time": "10:00–10:50",
+    "name": "Brooklyn Bridge Walkway",
+    "ko": "브루클린 브릿지 보행로",
+    "lat": 40.70609,
+    "lon": -73.99686,
+    "category": "산책",
+    "description": "1883년에 개통된 뉴욕의 상징적인 다리입니다. 보행자 도로에서 맨해튼 방향 전망을 볼 수 있습니다.",
+    "tip": "전부 건너지 않아도 중간 정도만 걸어도 사진이 좋습니다."
+  },
+  {
+    "day": 2,
+    "time": "11:10–11:50",
+    "name": "9/11 Memorial",
+    "ko": "9·11 메모리얼",
+    "lat": 40.7115,
+    "lon": -74.01334,
+    "category": "역사",
+    "description": "현대 뉴욕의 비극과 재건을 기억하는 장소입니다. 월스트리트와 함께 묶기 좋습니다.",
+    "tip": "차분한 분위기의 장소라 일정 중간에 너무 급하게 보지 않는 것이 좋습니다."
+  },
+  {
+    "day": 2,
+    "time": "11:50–12:10",
+    "name": "Wall Street",
+    "ko": "월스트리트",
+    "lat": 40.70603,
+    "lon": -74.00883,
+    "category": "금융·역사",
+    "description": "뉴욕 금융의 중심지입니다. 네덜란드 정착지의 담장 역사와 금융 제도의 발달을 함께 생각해볼 수 있습니다.",
+    "tip": "짧게 사진을 찍고 다음 식사 장소로 이동하면 됩니다."
+  },
+  {
+    "day": 2,
+    "time": "12:30–1:20",
+    "name": "Russ & Daughters",
+    "ko": "러스 앤 도터스",
+    "lat": 40.72275,
+    "lon": -73.9881,
+    "category": "점심",
+    "description": "뉴욕식 베이글과 훈제 연어 문화를 대표하는 유대계 식료품점입니다.",
+    "tip": "점심 베이글 코스로 가장 의미 있는 선택입니다."
+  },
+  {
+    "day": 2,
+    "time": "1:40–2:30",
+    "name": "Washington Square Park / NYU",
+    "ko": "워싱턴 스퀘어 파크 / NYU",
+    "lat": 40.73082,
+    "lon": -73.99733,
+    "category": "공원·대학",
+    "description": "NYU 학생들이 캠퍼스처럼 사용하는 공원입니다. 조지 워싱턴 아치와 거리 공연 분위기가 특징입니다.",
+    "tip": "그리니치 빌리지 산책과 함께 묶으면 좋습니다."
+  },
+  {
+    "day": 2,
+    "time": "3:20–4:10",
+    "name": "Chelsea Market",
+    "ko": "첼시 마켓",
+    "lat": 40.74244,
+    "lon": -74.00604,
+    "category": "휴식·간식",
+    "description": "옛 공장·창고 분위기를 살린 실내 마켓입니다. 음식, 커피, 화장실 휴식 장소로 좋습니다.",
+    "tip": "High Line으로 올라가기 전 쉬기 좋은 지점입니다."
+  },
+  {
+    "day": 2,
+    "time": "4:10–5:20",
+    "name": "The High Line",
+    "ko": "하이라인",
+    "lat": 40.74799,
+    "lon": -74.00476,
+    "category": "도시재생 공원",
+    "description": "옛 고가 화물철도를 공원으로 바꾼 도시재생 공간입니다. 자동차가 보이지 않는 보행자 중심 산책로입니다.",
+    "tip": "첼시 마켓에서 올라가 허드슨 야드 방향으로 걷는 동선이 좋습니다."
+  },
+  {
+    "day": 2,
+    "time": "5:20–6:30",
+    "name": "Hudson Yards / Vessel",
+    "ko": "허드슨 야드 / 베슬",
+    "lat": 40.75383,
+    "lon": -74.00215,
+    "category": "도시개발·랜드마크",
+    "description": "기차 기지 위에 인공 지반을 만들고 조성한 대규모 복합 개발 단지입니다. Vessel은 벌집 모양 구조물로 유명합니다.",
+    "tip": "High Line을 따라 북쪽으로 걸으면 자연스럽게 도착합니다."
+  }
+];
+    const day1 = places.filter(p => p.day === 1);
+    const day2 = places.filter(p => p.day === 2);
+  </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([40.742, -73.990], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const markerMap = new Map();
+    const bounds = [];
+
+    const day1Icon = L.divIcon({
+      className: '',
+      html: '<div style="width:24px;height:24px;border-radius:50%;background:#0f766e;color:white;display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">1</div>',
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+
+    const day2Icon = L.divIcon({
+      className: '',
+      html: '<div style="width:24px;height:24px;border-radius:50%;background:#7c3aed;color:white;display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,.3);">2</div>',
+      iconSize: [24, 24],
+      iconAnchor: [12, 12]
+    });
+
+    function popupHtml(place) {
+      return `
+        <div class="popup-title">${place.name}</div>
+        <div class="popup-sub">${place.ko} · Day ${place.day} · ${place.time}</div>
+        <div class="popup-desc">${place.description}<br><br><b>Tip:</b> ${place.tip}</div>
+      `;
+    }
+
+    places.forEach((place, index) => {
+      const marker = L.marker([place.lat, place.lon], { icon: place.day === 1 ? day1Icon : day2Icon })
+        .addTo(map)
+        .bindPopup(popupHtml(place));
+      marker.on('click', () => selectPlace(index, true));
+      markerMap.set(index, marker);
+      bounds.push([place.lat, place.lon]);
+    });
+
+    const day1Line = L.polyline(day1.map(p => [p.lat, p.lon]), {
+      weight: 4,
+      opacity: 0.75,
+      color: '#0f766e'
+    }).addTo(map);
+
+    const day2Line = L.polyline(day2.map(p => [p.lat, p.lon]), {
+      weight: 4,
+      opacity: 0.75,
+      color: '#7c3aed'
+    }).addTo(map);
+
+    map.fitBounds(bounds, { padding: [35, 35] });
+
+    function rowHtml(place, index) {
+      return `
+        <tr class="place-row" data-index="${index}" data-day="${place.day}">
+          <td class="time">${place.time}</td>
+          <td>
+            <div class="place-name">${place.name}</div>
+            <div class="place-ko">${place.ko}</div>
+          </td>
+          <td><span class="category">${place.category}</span></td>
+          <td>
+            <div class="desc">${place.description}</div>
+          </td>
+        </tr>
+      `;
+    }
+
+    document.getElementById('day1Rows').innerHTML = places
+      .map((p, i) => p.day === 1 ? rowHtml(p, i) : '')
+      .join('');
+
+    document.getElementById('day2Rows').innerHTML = places
+      .map((p, i) => p.day === 2 ? rowHtml(p, i) : '')
+      .join('');
+
+    function selectPlace(index, fromMarker=false) {
+      const place = places[index];
+      const marker = markerMap.get(index);
+
+      document.querySelectorAll('.place-row').forEach(row => row.classList.remove('active'));
+      const row = document.querySelector(`.place-row[data-index="${index}"]`);
+      if (row) {
+        row.classList.add('active');
+        if (!fromMarker) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      map.setView([place.lat, place.lon], 16, { animate: true });
+      marker.openPopup();
+
+      document.getElementById('selectedTitle').textContent = `${place.name}`;
+      document.getElementById('selectedText').textContent = `${place.ko} · ${place.time} · ${place.description}`;
+    }
+
+    document.querySelectorAll('.place-row').forEach(row => {
+      row.addEventListener('click', () => selectPlace(Number(row.dataset.index)));
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('.day-section').forEach(section => {
+          const day = section.dataset.daySection;
+          section.classList.toggle('hidden', filter !== 'all' && filter !== day);
+        });
+
+        if (filter === '1') {
+          map.fitBounds(day1.map(p => [p.lat, p.lon]), { padding: [35, 35] });
+        } else if (filter === '2') {
+          map.fitBounds(day2.map(p => [p.lat, p.lon]), { padding: [35, 35] });
+        } else {
+          map.fitBounds(bounds, { padding: [35, 35] });
+        }
+      });
+    });
+
+    setTimeout(() => selectPlace(0), 500);
+  </script>
+</body>
+</html>
