@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ark Encounter + 콜럼버스 홍콩반점 하루 코스</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --blue: #2563eb;
+      --green: #059669;
+      --orange: #ea580c;
+      --red: #dc2626;
+      --shadow: 0 18px 45px rgba(17, 24, 39, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(234, 88, 12, 0.14), transparent 32%),
+        var(--bg);
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px 56px; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 290px;
+      border-radius: 30px;
+      padding: 32px;
+      color: white;
+      box-shadow: var(--shadow);
+      background:
+        linear-gradient(120deg, rgba(17, 24, 39, .82), rgba(17, 24, 39, .24)),
+        url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80") center/cover;
+    }
+    .hero small {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.17);
+      border: 1px solid rgba(255,255,255,.25);
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+    .hero h1 { margin: 18px 0 10px; font-size: clamp(30px, 5vw, 54px); line-height: 1.02; letter-spacing: -0.06em; }
+    .hero p { max-width: 720px; margin: 0; line-height: 1.65; color: rgba(255,255,255,.9); }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      padding: 12px 16px; border-radius: 999px; text-decoration:none; font-weight:800;
+      background:white; color:#111827;
+    }
+    .btn.secondary { background: rgba(255,255,255,.15); color:white; border:1px solid rgba(255,255,255,.28); }
+    .summary-grid { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .summary-card {
+      padding: 16px; border-radius: 20px; background: var(--card); box-shadow: 0 10px 25px rgba(17,24,39,.08);
+      border: 1px solid var(--line);
+    }
+    .summary-card b { display:block; font-size: 14px; margin-bottom: 6px; }
+    .summary-card span { color: var(--muted); font-size: 13px; line-height:1.45; }
+    .main { display:grid; grid-template-columns: 1fr 430px; gap: 18px; align-items:start; }
+    .panel {
+      background: var(--card); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 12px 28px rgba(17,24,39,.08);
+      overflow: hidden;
+    }
+    .panel h2 { margin:0; padding:20px 22px 10px; font-size:24px; letter-spacing:-0.04em; }
+    .notice { margin: 0 22px 18px; padding: 14px 16px; border-radius: 16px; background:#fff7ed; color:#9a3412; line-height:1.55; font-size:14px; }
+    .timeline { padding: 8px 18px 20px; }
+    .stop {
+      display:grid; grid-template-columns: 86px 1fr; gap: 12px; padding: 16px 4px;
+      border-top: 1px solid var(--line);
+    }
+    .time { font-weight: 900; color: var(--blue); }
+    .stop h3 { margin:0 0 6px; font-size:18px; }
+    .stop .ko { color: var(--muted); font-size:13px; margin-bottom:8px; }
+    .stop p { margin:0 0 8px; color:#374151; line-height:1.55; font-size:14px; }
+    .tip { color:#065f46; background:#ecfdf5; padding: 8px 10px; border-radius: 12px; display:inline-block; line-height:1.45; font-size:13px; }
+    .map-panel { position: sticky; top: 16px; }
+    #map { height: 520px; width: 100%; border-bottom:1px solid var(--line); }
+    .map-info { padding: 16px; }
+    .map-info h3 { margin:0 0 8px; }
+    .map-info p { margin:0; color:var(--muted); font-size:14px; line-height:1.55; }
+    .photo-grid { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+    .photo-card { border-radius: 20px; overflow:hidden; background:white; border:1px solid var(--line); box-shadow:0 10px 25px rgba(17,24,39,.08); }
+    .photo-card img { display:block; width:100%; height:140px; object-fit:cover; background:#e5e7eb; }
+    .photo-card div { padding: 12px; font-size: 14px; font-weight: 800; }
+    .sources { margin-top:18px; padding:18px 20px; border-radius:20px; background:#f9fafb; border:1px solid var(--line); color:#4b5563; font-size:13px; line-height:1.6; }
+    .sources h3 { margin:0 0 8px; color:#111827; }
+    @media (max-width: 940px) {
+      .summary-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .main { grid-template-columns: 1fr; }
+      .map-panel { position: static; }
+    }
+    @media (max-width: 620px) {
+      .wrap { padding: 16px 12px 38px; }
+      .hero { padding: 24px 20px; border-radius: 22px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .stop { grid-template-columns: 1fr; gap: 4px; }
+      #map { height: 420px; }
+      .photo-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <small>Kentucky · Columbus · Solon</small>
+      <h1>Ark Encounter + 콜럼버스 홍콩반점 하루 코스</h1>
+      <p>Solon에서 출발해 Kentucky의 Ark Encounter를 관람하고, Columbus의 Hong Kong Chinese Restaurant에서 저녁을 먹은 뒤 Solon으로 돌아오는 장거리 당일 코스입니다.</p>
+      <div class="actions">
+        <a class="btn" href="https://www.google.com/maps/dir/Solon,+OH/Lebanon,+OH/1+Ark+Encounter+Dr,+Williamstown,+KY+41097/1+Ark+Encounter+Dr,+Williamstown,+KY+41097/1884+Hard+Rd,+Columbus,+OH+43235/Solon,+OH" target="_blank" rel="noopener">Google Maps 전체 경로 열기</a>
+        <a class="btn secondary" href="index.html">일정 모음으로 돌아가기</a>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <div class="summary-card"><b>코스 유형</b><span>장거리 자동차 당일 코스</span></div><div class="summary-card"><b>핵심 방문지</b><span>Ark Encounter + Columbus 저녁</span></div><div class="summary-card"><b>운전 난이도</b><span>높음 · 휴식 필수</span></div><div class="summary-card"><b>추천 출발</b><span>아침 6:30 전후</span></div>
+    </section>
+
+    <section class="main">
+      <article class="panel">
+        <h2>하루 일정표</h2>
+        <div class="notice">이 코스는 하루 운전 시간이 매우 깁니다. Ark Encounter 운영 시간과 Hong Kong Chinese Restaurant 휴무일을 방문 전 반드시 확인하세요.</div>
+        <div class="timeline">
+          
+          <div class="stop">
+            <div class="time">06:30</div>
+            <div>
+              <h3>Solon 출발</h3>
+              <div class="ko">솔론에서 켄터키 방향 출발</div>
+              <p>당일 왕복 기준으로 매우 긴 운전 일정입니다. 아침 일찍 출발하고, 중간 휴식은 짧게 잡는 편이 좋습니다.</p>
+              <span class="tip">물, 간식, 충전기, 편한 신발 준비.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">10:00</div>
+            <div>
+              <h3>I-71 / Cincinnati 방향 휴식</h3>
+              <div class="ko">오하이오 남부 이동 중 짧은 휴식</div>
+              <p>화장실, 커피, 주유를 빠르게 해결하는 중간 휴식 지점입니다. 긴 하루 일정이므로 휴식을 너무 길게 잡지 않는 것이 좋습니다.</p>
+              <span class="tip">Ark Encounter 도착 전 마지막 컨디션 조절.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">11:15</div>
+            <div>
+              <h3>Ark Encounter</h3>
+              <div class="ko">켄터키 윌리엄스타운 노아의 방주 테마 명소</div>
+              <p>실물 크기의 노아의 방주를 중심으로 전시, 산책, 식사 공간 등을 보는 핵심 방문지입니다. 관람 시간은 최소 3~4시간 정도로 잡는 것이 좋습니다.</p>
+              <span class="tip">운영 시간은 계절별로 변동되므로 출발 전 공식 사이트 확인.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">16:00</div>
+            <div>
+              <h3>Ark Encounter 출발</h3>
+              <div class="ko">콜럼버스 저녁 식사 장소로 이동</div>
+              <p>콜럼버스 북서쪽 식당까지 이동합니다. 저녁 식사 시간을 맞추려면 Ark에서 너무 늦게 나오지 않는 것이 좋습니다.</p>
+              <span class="tip">운전 피로를 고려해 식사 전 커피나 간식 준비.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">18:15</div>
+            <div>
+              <h3>Hong Kong Chinese Restaurant</h3>
+              <div class="ko">콜럼버스 홍콩반점 / 1884 Hard Rd</div>
+              <p>Ark Encounter 관람 후 솔론으로 바로 돌아오기 전 저녁 식사를 넣은 경유지입니다. 화요일은 휴무로 확인되므로 요일을 꼭 확인하세요.</p>
+              <span class="tip">식사 후 솔론까지 약 2시간 이상 운전이 남습니다.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">21:15</div>
+            <div>
+              <h3>Solon 도착</h3>
+              <div class="ko">하루 코스 종료</div>
+              <p>총 운전 시간이 긴 당일 코스입니다. 가족 동반이라면 다음 날 오전 일정을 가볍게 잡는 것을 추천합니다.</p>
+              <span class="tip">늦은 밤 도착 예상. 운전 교대 또는 중간 휴식 권장.</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="panel map-panel">
+        <div id="map"></div>
+        <div class="map-info">
+          <h3>지도 동선</h3>
+          <p>Solon → Ark Encounter → Columbus Hong Kong Chinese Restaurant → Solon 순서로 이어지는 삼각형 장거리 동선입니다.</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="photo-grid">
+      
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Solon 출발" loading="lazy" />
+        <div>Solon 출발</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="I-71 / Cincinnati 방향 휴식" loading="lazy" />
+        <div>I-71 / Cincinnati 방향 휴식</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Ark Encounter" loading="lazy" />
+        <div>Ark Encounter</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1444084316824-dc26d6657664?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Ark Encounter 출발" loading="lazy" />
+        <div>Ark Encounter 출발</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Hong Kong Chinese Restaurant" loading="lazy" />
+        <div>Hong Kong Chinese Restaurant</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Solon 도착" loading="lazy" />
+        <div>Solon 도착</div>
+      </div>
+    </section>
+
+    <section class="sources">
+      <h3>확인 메모</h3>
+      <p>Ark Encounter는 Williamstown, Kentucky에 있는 가족형 명소이며, 공식 사이트에서 계절별 운영 시간이 변동될 수 있음을 안내합니다.</p><p>Hong Kong Chinese Restaurant은 Columbus 1884 Hard Rd 주소와 화요일 휴무 정보가 확인됩니다.</p><p>이 웹페이지의 이동 시간은 일정 설계용 추정치이므로 실제 출발 전 Google Maps 실시간 교통을 확인하세요.</p>
+    </section>
+  </div>
+
+  <script>
+    const stops = [
+  {
+    "time": "06:30",
+    "name": "Solon 출발",
+    "ko": "솔론에서 켄터키 방향 출발",
+    "lat": 41.3898,
+    "lng": -81.4412,
+    "address": "Solon, OH",
+    "maps_query": "Solon, OH",
+    "description": "당일 왕복 기준으로 매우 긴 운전 일정입니다. 아침 일찍 출발하고, 중간 휴식은 짧게 잡는 편이 좋습니다.",
+    "tip": "물, 간식, 충전기, 편한 신발 준비.",
+    "photo": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+    "hero_image": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80"
+  },
+  {
+    "time": "10:00",
+    "name": "I-71 / Cincinnati 방향 휴식",
+    "ko": "오하이오 남부 이동 중 짧은 휴식",
+    "lat": 39.3601,
+    "lng": -84.278,
+    "address": "Lebanon, OH",
+    "maps_query": "Lebanon, OH",
+    "description": "화장실, 커피, 주유를 빠르게 해결하는 중간 휴식 지점입니다. 긴 하루 일정이므로 휴식을 너무 길게 잡지 않는 것이 좋습니다.",
+    "tip": "Ark Encounter 도착 전 마지막 컨디션 조절.",
+    "photo": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    "time": "11:15",
+    "name": "Ark Encounter",
+    "ko": "켄터키 윌리엄스타운 노아의 방주 테마 명소",
+    "lat": 38.6223,
+    "lng": -84.5856,
+    "address": "1 Ark Encounter Dr, Williamstown, KY 41097",
+    "maps_query": "1 Ark Encounter Dr, Williamstown, KY 41097",
+    "description": "실물 크기의 노아의 방주를 중심으로 전시, 산책, 식사 공간 등을 보는 핵심 방문지입니다. 관람 시간은 최소 3~4시간 정도로 잡는 것이 좋습니다.",
+    "tip": "운영 시간은 계절별로 변동되므로 출발 전 공식 사이트 확인.",
+    "photo": "https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?auto=format&fit=crop&w=1200&q=80",
+    "hero_image": "https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?auto=format&fit=crop&w=1600&q=80"
+  },
+  {
+    "time": "16:00",
+    "name": "Ark Encounter 출발",
+    "ko": "콜럼버스 저녁 식사 장소로 이동",
+    "lat": 38.6223,
+    "lng": -84.5856,
+    "address": "1 Ark Encounter Dr, Williamstown, KY 41097",
+    "maps_query": "1 Ark Encounter Dr, Williamstown, KY 41097",
+    "description": "콜럼버스 북서쪽 식당까지 이동합니다. 저녁 식사 시간을 맞추려면 Ark에서 너무 늦게 나오지 않는 것이 좋습니다.",
+    "tip": "운전 피로를 고려해 식사 전 커피나 간식 준비.",
+    "photo": "https://images.unsplash.com/photo-1444084316824-dc26d6657664?auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    "time": "18:15",
+    "name": "Hong Kong Chinese Restaurant",
+    "ko": "콜럼버스 홍콩반점 / 1884 Hard Rd",
+    "lat": 40.1186,
+    "lng": -83.0902,
+    "address": "1884 Hard Rd, Columbus, OH 43235",
+    "maps_query": "1884 Hard Rd, Columbus, OH 43235",
+    "description": "Ark Encounter 관람 후 솔론으로 바로 돌아오기 전 저녁 식사를 넣은 경유지입니다. 화요일은 휴무로 확인되므로 요일을 꼭 확인하세요.",
+    "tip": "식사 후 솔론까지 약 2시간 이상 운전이 남습니다.",
+    "photo": "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    "time": "21:15",
+    "name": "Solon 도착",
+    "ko": "하루 코스 종료",
+    "lat": 41.3898,
+    "lng": -81.4412,
+    "address": "Solon, OH",
+    "maps_query": "Solon, OH",
+    "description": "총 운전 시간이 긴 당일 코스입니다. 가족 동반이라면 다음 날 오전 일정을 가볍게 잡는 것을 추천합니다.",
+    "tip": "늦은 밤 도착 예상. 운전 교대 또는 중간 휴식 권장.",
+    "photo": "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=1200&q=80"
+  }
+];
+    const map = L.map('map').setView([39.917150, -83.236967], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const latlngs = [];
+    stops.forEach((s, i) => {
+      const latlng = [s.lat, s.lng];
+      latlngs.push(latlng);
+      const marker = L.marker(latlng).addTo(map);
+      marker.bindPopup(`<b>${i+1}. ${s.name}</b><br>${s.time}<br>${s.ko || ''}`);
+    });
+    const line = L.polyline(latlngs, { weight: 5, opacity: 0.78 }).addTo(map);
+    map.fitBounds(line.getBounds(), { padding: [28, 28] });
+  </script>
+</body>
+</html>

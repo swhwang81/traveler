@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solon 출발 나이아가라 폭포 하루 코스</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --blue: #2563eb;
+      --green: #059669;
+      --orange: #ea580c;
+      --red: #dc2626;
+      --shadow: 0 18px 45px rgba(17, 24, 39, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(234, 88, 12, 0.14), transparent 32%),
+        var(--bg);
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 18px 56px; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 290px;
+      border-radius: 30px;
+      padding: 32px;
+      color: white;
+      box-shadow: var(--shadow);
+      background:
+        linear-gradient(120deg, rgba(17, 24, 39, .82), rgba(17, 24, 39, .24)),
+        url("https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=1200&q=80") center/cover;
+    }
+    .hero small {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.17);
+      border: 1px solid rgba(255,255,255,.25);
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+    .hero h1 { margin: 18px 0 10px; font-size: clamp(30px, 5vw, 54px); line-height: 1.02; letter-spacing: -0.06em; }
+    .hero p { max-width: 720px; margin: 0; line-height: 1.65; color: rgba(255,255,255,.9); }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      padding: 12px 16px; border-radius: 999px; text-decoration:none; font-weight:800;
+      background:white; color:#111827;
+    }
+    .btn.secondary { background: rgba(255,255,255,.15); color:white; border:1px solid rgba(255,255,255,.28); }
+    .summary-grid { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .summary-card {
+      padding: 16px; border-radius: 20px; background: var(--card); box-shadow: 0 10px 25px rgba(17,24,39,.08);
+      border: 1px solid var(--line);
+    }
+    .summary-card b { display:block; font-size: 14px; margin-bottom: 6px; }
+    .summary-card span { color: var(--muted); font-size: 13px; line-height:1.45; }
+    .main { display:grid; grid-template-columns: 1fr 430px; gap: 18px; align-items:start; }
+    .panel {
+      background: var(--card); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 12px 28px rgba(17,24,39,.08);
+      overflow: hidden;
+    }
+    .panel h2 { margin:0; padding:20px 22px 10px; font-size:24px; letter-spacing:-0.04em; }
+    .notice { margin: 0 22px 18px; padding: 14px 16px; border-radius: 16px; background:#fff7ed; color:#9a3412; line-height:1.55; font-size:14px; }
+    .timeline { padding: 8px 18px 20px; }
+    .stop {
+      display:grid; grid-template-columns: 86px 1fr; gap: 12px; padding: 16px 4px;
+      border-top: 1px solid var(--line);
+    }
+    .time { font-weight: 900; color: var(--blue); }
+    .stop h3 { margin:0 0 6px; font-size:18px; }
+    .stop .ko { color: var(--muted); font-size:13px; margin-bottom:8px; }
+    .stop p { margin:0 0 8px; color:#374151; line-height:1.55; font-size:14px; }
+    .tip { color:#065f46; background:#ecfdf5; padding: 8px 10px; border-radius: 12px; display:inline-block; line-height:1.45; font-size:13px; }
+    .map-panel { position: sticky; top: 16px; }
+    #map { height: 520px; width: 100%; border-bottom:1px solid var(--line); }
+    .map-info { padding: 16px; }
+    .map-info h3 { margin:0 0 8px; }
+    .map-info p { margin:0; color:var(--muted); font-size:14px; line-height:1.55; }
+    .photo-grid { display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+    .photo-card { border-radius: 20px; overflow:hidden; background:white; border:1px solid var(--line); box-shadow:0 10px 25px rgba(17,24,39,.08); }
+    .photo-card img { display:block; width:100%; height:140px; object-fit:cover; background:#e5e7eb; }
+    .photo-card div { padding: 12px; font-size: 14px; font-weight: 800; }
+    .sources { margin-top:18px; padding:18px 20px; border-radius:20px; background:#f9fafb; border:1px solid var(--line); color:#4b5563; font-size:13px; line-height:1.6; }
+    .sources h3 { margin:0 0 8px; color:#111827; }
+    @media (max-width: 940px) {
+      .summary-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .main { grid-template-columns: 1fr; }
+      .map-panel { position: static; }
+    }
+    @media (max-width: 620px) {
+      .wrap { padding: 16px 12px 38px; }
+      .hero { padding: 24px 20px; border-radius: 22px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .stop { grid-template-columns: 1fr; gap: 4px; }
+      #map { height: 420px; }
+      .photo-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <small>Niagara Falls · Day Trip</small>
+      <h1>Solon 출발 나이아가라 폭포 하루 코스</h1>
+      <p>Solon에서 출발해 Niagara Falls State Park 미국 쪽을 중심으로 폭포 전망, Goat Island, Cave of the Winds 선택 관광을 보고 돌아오는 당일 코스입니다.</p>
+      <div class="actions">
+        <a class="btn" href="https://www.google.com/maps/dir/Solon,+OH/Erie,+PA/Niagara+Falls+State+Park+Parking+Lot+2,+Niagara+Falls,+NY/Terrapin+Point,+Niagara+Falls,+NY/Cave+of+the+Winds,+Niagara+Falls,+NY/Niagara+Falls+Observation+Tower,+Niagara+Falls,+NY/Niagara+Falls+State+Park+Parking+Lot+2,+Niagara+Falls,+NY/Erie,+PA+restaurants/Solon,+OH" target="_blank" rel="noopener">Google Maps 전체 경로 열기</a>
+        <a class="btn secondary" href="index.html">일정 모음으로 돌아가기</a>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <div class="summary-card"><b>코스 유형</b><span>미국 쪽 폭포 당일 코스</span></div><div class="summary-card"><b>핵심 방문지</b><span>Goat Island · Terrapin Point</span></div><div class="summary-card"><b>운전 난이도</b><span>중상 · 왕복 장거리</span></div><div class="summary-card"><b>추천 출발</b><span>아침 7:00 전후</span></div>
+    </section>
+
+    <section class="main">
+      <article class="panel">
+        <h2>하루 일정표</h2>
+        <div class="notice">이 코스는 미국 쪽 Niagara Falls State Park 중심입니다. 캐나다 쪽으로 넘어가는 일정은 포함하지 않았으며, 국경 통과 시 여권과 입국 조건을 별도로 확인해야 합니다.</div>
+        <div class="timeline">
+          
+          <div class="stop">
+            <div class="time">07:00</div>
+            <div>
+              <h3>Solon 출발</h3>
+              <div class="ko">솔론에서 나이아가라 폭포 미국 쪽으로 출발</div>
+              <p>나이아가라 당일치기는 가능하지만 왕복 운전 시간이 길기 때문에 아침 일찍 출발하는 편이 좋습니다.</p>
+              <span class="tip">미국 쪽 Niagara Falls State Park 중심이면 여권 없이 구성 가능.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">08:45</div>
+            <div>
+              <h3>Erie, PA 휴식</h3>
+              <div class="ko">펜실베이니아 이리 근처 휴식</div>
+              <p>화장실, 커피, 간단한 간식을 위한 중간 휴식 지점입니다. 너무 오래 머물지 않고 20~30분 정도로 잡습니다.</p>
+              <span class="tip">아이 동반이면 여기서 첫 번째 긴 휴식.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">11:00</div>
+            <div>
+              <h3>Niagara Falls State Park Parking</h3>
+              <div class="ko">고트 아일랜드 또는 주차장 도착</div>
+              <p>미국 쪽 주차 후 도보로 폭포 전망 지점을 둘러보는 일정입니다. 주말이나 성수기에는 주차 시간을 여유 있게 잡는 것이 좋습니다.</p>
+              <span class="tip">공식 FAQ 기준 Goat Island 주차장 좌표를 반영.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">11:20</div>
+            <div>
+              <h3>Terrapin Point</h3>
+              <div class="ko">호스슈 폭포 전망</div>
+              <p>미국 쪽에서 Horseshoe Falls를 가까이 볼 수 있는 대표 전망 지점입니다. 사진 촬영과 첫 감상 지점으로 좋습니다.</p>
+              <span class="tip">바람 방향에 따라 물안개가 강할 수 있음.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">12:30</div>
+            <div>
+              <h3>Cave of the Winds 또는 점심</h3>
+              <div class="ko">선택 관광 또는 식사</div>
+              <p>시간과 체력에 따라 Cave of the Winds를 선택하거나, 바로 점심을 먹는 방식으로 조정합니다. 아이들과 함께라면 대기시간을 보고 결정하는 것이 좋습니다.</p>
+              <span class="tip">티켓과 운영 시간은 방문일 기준으로 다시 확인.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">14:00</div>
+            <div>
+              <h3>Observation Tower &amp; American Falls</h3>
+              <div class="ko">전망대와 아메리칸 폭포</div>
+              <p>American Falls와 Bridal Veil Falls를 보기 좋은 구간입니다. 시간이 맞으면 Maid of the Mist 탑승도 검토할 수 있습니다.</p>
+              <span class="tip">당일치기라면 욕심내기보다 전망 중심으로 짧고 굵게.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">16:00</div>
+            <div>
+              <h3>Niagara Falls 출발</h3>
+              <div class="ko">솔론으로 복귀 시작</div>
+              <p>늦어도 오후 4시 전후에는 출발하는 것을 추천합니다. 늦게 출발하면 솔론 도착이 밤늦어질 수 있습니다.</p>
+              <span class="tip">출발 전 화장실, 물, 간식 준비.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">18:00</div>
+            <div>
+              <h3>Erie 또는 Mentor 근처 저녁</h3>
+              <div class="ko">복귀 중 저녁 식사</div>
+              <p>가족 컨디션에 따라 Erie에서 식사하거나, 조금 더 운전해서 Cleveland 동쪽에서 식사하는 방식으로 조정할 수 있습니다.</p>
+              <span class="tip">나이아가라 관광 시간이 길어지면 저녁은 간단히.</span>
+            </div>
+          </div>
+          <div class="stop">
+            <div class="time">20:30</div>
+            <div>
+              <h3>Solon 도착</h3>
+              <div class="ko">하루 코스 종료</div>
+              <p>나이아가라 미국 쪽만 보는 당일 코스입니다. 캐나다 쪽으로 넘어가는 일정은 별도 여권/입국 조건 확인이 필요합니다.</p>
+              <span class="tip">다음 날 일정은 가볍게 잡기.</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="panel map-panel">
+        <div id="map"></div>
+        <div class="map-info">
+          <h3>지도 동선</h3>
+          <p>Solon → Erie 휴식 → Niagara Falls State Park → 폭포 전망 지점 → Erie 또는 Cleveland 동쪽 저녁 → Solon 복귀 동선입니다.</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="photo-grid">
+      
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Solon 출발" loading="lazy" />
+        <div>Solon 출발</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Erie, PA 휴식" loading="lazy" />
+        <div>Erie, PA 휴식</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Niagara Falls State Park Parking" loading="lazy" />
+        <div>Niagara Falls State Park Parking</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1533094602577-198d3beab8ea?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Terrapin Point" loading="lazy" />
+        <div>Terrapin Point</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Cave of the Winds 또는 점심" loading="lazy" />
+        <div>Cave of the Winds 또는 점심</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1465657043725-9912dbd907f7?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Observation Tower &amp; American Falls" loading="lazy" />
+        <div>Observation Tower &amp; American Falls</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1488085061387-422e29b40080?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Niagara Falls 출발" loading="lazy" />
+        <div>Niagara Falls 출발</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Erie 또는 Mentor 근처 저녁" loading="lazy" />
+        <div>Erie 또는 Mentor 근처 저녁</div>
+      </div>
+      <div class="photo-card">
+        <img src="https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&amp;fit=crop&amp;w=1200&amp;q=80" alt="Solon 도착" loading="lazy" />
+        <div>Solon 도착</div>
+      </div>
+    </section>
+
+    <section class="sources">
+      <h3>확인 메모</h3>
+      <p>Niagara Falls State Park 공식 정보 기준으로 주차장과 주요 전망 지점은 미국 쪽 공원 내에 있습니다.</p><p>Cave of the Winds와 기타 유료 어트랙션은 계절과 날짜에 따라 운영 시간이 달라질 수 있어 방문일 기준 확인이 필요합니다.</p><p>이 웹페이지의 일정은 미국 쪽 당일치기 기준이며 캐나다 입국은 포함하지 않습니다.</p>
+    </section>
+  </div>
+
+  <script>
+    const stops = [
+  {
+    "time": "07:00",
+    "name": "Solon 출발",
+    "ko": "솔론에서 나이아가라 폭포 미국 쪽으로 출발",
+    "lat": 41.3898,
+    "lng": -81.4412,
+    "address": "Solon, OH",
+    "maps_query": "Solon, OH",
+    "description": "나이아가라 당일치기는 가능하지만 왕복 운전 시간이 길기 때문에 아침 일찍 출발하는 편이 좋습니다.",
+    "tip": "미국 쪽 Niagara Falls State Park 중심이면 여권 없이 구성 가능.",
+    "photo": "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=1200&q=80",
+    "hero_image": "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=1600&q=80"
+  },
+  {
+    "time": "08:45",
+    "name": "Erie, PA 휴식",
+    "ko": "펜실베이니아 이리 근처 휴식",
+    "lat": 42.1292,
+    "lng": -80.0851,
+    "address": "Erie, PA",
+    "maps_query": "Erie, PA",
+    "description": "화장실, 커피, 간단한 간식을 위한 중간 휴식 지점입니다. 너무 오래 머물지 않고 20~30분 정도로 잡습니다.",
+    "tip": "아이 동반이면 여기서 첫 번째 긴 휴식.",
+    "photo": "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    "time": "11:00",
+    "name": "Niagara Falls State Park Parking",
+    "ko": "고트 아일랜드 또는 주차장 도착",
+    "lat": 43.081528,
+    "lng": -79.06424,
+    "address": "Niagara Falls State Park, Niagara Falls, NY",
+    "maps_query": "Niagara Falls State Park Parking Lot 2, Niagara Falls, NY",
+    "description": "미국 쪽 주차 후 도보로 폭포 전망 지점을 둘러보는 일정입니다. 주말이나 성수기에는 주차 시간을 여유 있게 잡는 것이 좋습니다.",
+    "tip": "공식 FAQ 기준 Goat Island 주차장 좌표를 반영.",
+    "photo": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80",
+    "hero_image": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1600&q=80"
+  },
+  {
+    "time": "11:20",
+    "name": "Terrapin Point",
+    "ko": "호스슈 폭포 전망",
+    "lat": 43.0787,
+    "lng": -79.0756,
+    "address": "Terrapin Point, Niagara Falls, NY",
+    "maps_query": "Terrapin Point, Niagara Falls, NY",
+    "description": "미국 쪽에서 Horseshoe Falls를 가까이 볼 수 있는 대표 전망 지점입니다. 사진 촬영과 첫 감상 지점으로 좋습니다.",
+    "tip": "바람 방향에 따라 물안개가 강할 수 있음.",
+    "photo": "https://images.unsplash.com/photo-1533094602577-198d3beab8ea?auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    "time": "12:30",
+    "name": "Cave of the Winds 또는 점심",
+    "ko": "선택 관광 또는 식사",
+    "lat": 43.083,
+    "lng": -79.0707,
+    "address": "Cave of the Winds, Niagara Falls, NY",
+    "maps_query": "Cave of the Winds, Niagara Falls, NY",
+    "description": "시간과 체력에 따라 Cave of the Winds를 선택하거나, 바로 점심을 먹는 방식으로 조정합니다. 아이들과 함께라면 대기시간을 보고 결정하는 것이 좋습니다.",
+    "tip": "티켓과 운영 시간은 방문일 기준으로 다시 확인.",
+    "photo": "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    "time": "14:00",
+    "name": "Observation Tower & American Falls",
+    "ko": "전망대와 아메리칸 폭포",
+    "lat": 43.085,
+    "lng": -79.07,
+    "address": "Niagara Falls Observation Tower, Niagara Falls, NY",
+    "maps_query": "Niagara Falls Observation Tower, Niagara Falls, NY",
+    "description": "American Falls와 Bridal Veil Falls를 보기 좋은 구간입니다. 시간이 맞으면 Maid of the Mist 탑승도 검토할 수 있습니다.",
+    "tip": "당일치기라면 욕심내기보다 전망 중심으로 짧고 굵게.",
+    "photo": "https://images.unsplash.com/photo-1465657043725-9912dbd907f7?auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    "time": "16:00",
+    "name": "Niagara Falls 출발",
+    "ko": "솔론으로 복귀 시작",
+    "lat": 43.081528,
+    "lng": -79.06424,
+    "address": "Niagara Falls State Park, Niagara Falls, NY",
+    "maps_query": "Niagara Falls State Park Parking Lot 2, Niagara Falls, NY",
+    "description": "늦어도 오후 4시 전후에는 출발하는 것을 추천합니다. 늦게 출발하면 솔론 도착이 밤늦어질 수 있습니다.",
+    "tip": "출발 전 화장실, 물, 간식 준비.",
+    "photo": "https://images.unsplash.com/photo-1488085061387-422e29b40080?auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    "time": "18:00",
+    "name": "Erie 또는 Mentor 근처 저녁",
+    "ko": "복귀 중 저녁 식사",
+    "lat": 42.1292,
+    "lng": -80.0851,
+    "address": "Erie, PA",
+    "maps_query": "Erie, PA restaurants",
+    "description": "가족 컨디션에 따라 Erie에서 식사하거나, 조금 더 운전해서 Cleveland 동쪽에서 식사하는 방식으로 조정할 수 있습니다.",
+    "tip": "나이아가라 관광 시간이 길어지면 저녁은 간단히.",
+    "photo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80"
+  },
+  {
+    "time": "20:30",
+    "name": "Solon 도착",
+    "ko": "하루 코스 종료",
+    "lat": 41.3898,
+    "lng": -81.4412,
+    "address": "Solon, OH",
+    "maps_query": "Solon, OH",
+    "description": "나이아가라 미국 쪽만 보는 당일 코스입니다. 캐나다 쪽으로 넘어가는 일정은 별도 여권/입국 조건 확인이 필요합니다.",
+    "tip": "다음 날 일정은 가볍게 잡기.",
+    "photo": "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1200&q=80"
+  }
+];
+    const map = L.map('map').setView([42.494195, -79.821931], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const latlngs = [];
+    stops.forEach((s, i) => {
+      const latlng = [s.lat, s.lng];
+      latlngs.push(latlng);
+      const marker = L.marker(latlng).addTo(map);
+      marker.bindPopup(`<b>${i+1}. ${s.name}</b><br>${s.time}<br>${s.ko || ''}`);
+    });
+    const line = L.polyline(latlngs, { weight: 5, opacity: 0.78 }).addTo(map);
+    map.fitBounds(line.getBounds(), { padding: [28, 28] });
+  </script>
+</body>
+</html>

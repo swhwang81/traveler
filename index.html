@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>미국 여행 일정 모음</title>
+  <title>여행 일정 모음</title>
   <style>
     :root {
       --bg: #f4f5f7;
@@ -135,6 +135,23 @@
       background-position: center;
     }
 
+
+    .ark::before {
+      background:
+        linear-gradient(to bottom, rgba(17, 24, 39, 0.05), rgba(17, 24, 39, 0.74)),
+        url("https://images.unsplash.com/photo-1605130284535-11dd9eedc58a?auto=format&fit=crop&w=1200&q=80");
+      background-size: cover;
+      background-position: center;
+    }
+
+    .niagara::before {
+      background:
+        linear-gradient(to bottom, rgba(17, 24, 39, 0.05), rgba(17, 24, 39, 0.74)),
+        url("https://images.unsplash.com/photo-1533094602577-198d3beab8ea?auto=format&fit=crop&w=1200&q=80");
+      background-size: cover;
+      background-position: center;
+    }
+
     .content {
       position: relative;
       z-index: 1;
@@ -239,10 +256,10 @@
   <main class="wrap">
     <header>
       <div class="eyebrow">USA Travel Itinerary</div>
-      <h1>미국 여행 일정 모음</h1>
+      <h1>여행 일정 모음</h1>
       <p class="subtitle">
-        뉴욕 여행 일정과 미국 서부 여행 일정을 한 곳에서 선택해 볼 수 있는 메인 페이지입니다.
-        아래 카드를 클릭하면 각 여행 일정 사이트로 이동합니다.
+        뉴욕, 미국 서부, 시카고, 워싱턴 DC, Ark Encounter, 나이아가라 폭포까지
+        여행·당일치기 코스를 한 곳에서 선택해 볼 수 있는 메인 페이지입니다.
       </p>
     </header>
 
@@ -316,10 +333,48 @@
         </div>
       </a>
 
+
+      <a class="trip-card ark" href="ark_columbus_solon_daytrip.html">
+        <div class="content">
+          <div class="badge">Kentucky + Columbus</div>
+          <h2>Ark Encounter 하루 코스</h2>
+          <p>
+            Solon에서 출발해 Kentucky의 Ark Encounter를 관람하고,
+            Columbus의 Hong Kong Chinese Restaurant에서 저녁을 먹은 뒤 돌아오는 장거리 당일 코스입니다.
+          </p>
+          <div class="meta">
+            <span class="chip">Day Trip</span>
+            <span class="chip">Long Drive</span>
+            <span class="chip">Dinner Stop</span>
+          </div>
+          <div class="button">Ark Encounter 코스 보기 →</div>
+        </div>
+      </a>
+
+      <a class="trip-card niagara" href="niagara_solon_daytrip.html">
+        <div class="content">
+          <div class="badge">Niagara Falls</div>
+          <h2>나이아가라 폭포 하루 코스</h2>
+          <p>
+            Solon에서 출발해 Niagara Falls State Park 미국 쪽을 중심으로
+            Goat Island, Terrapin Point, American Falls를 둘러보고 돌아오는 당일 코스입니다.
+          </p>
+          <div class="meta">
+            <span class="chip">Day Trip</span>
+            <span class="chip">Waterfall Route</span>
+            <span class="chip">USA Side</span>
+          </div>
+          <div class="button">나이아가라 코스 보기 →</div>
+        </div>
+      </a>
+
     </section>
 
     <div class="note">
-      copyright ©️ dclassic.net
+      연결할 때는 같은 폴더 안에 이 파일을 <code>index.html</code>로 두고,
+      각 여행 상세 파일을 카드의 <code>href</code> 값과 같은 이름으로 두면 됩니다.
+      새로 추가된 당일 코스 파일명은 <code>ark_columbus_solon_daytrip.html</code>과
+      <code>niagara_solon_daytrip.html</code>입니다.
     </div>
   </main>
 </body>
