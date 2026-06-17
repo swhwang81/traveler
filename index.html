@@ -152,6 +152,15 @@
       background-position: center;
     }
 
+
+    .niagara-toronto::before {
+      background:
+        linear-gradient(to bottom, rgba(17, 24, 39, 0.05), rgba(17, 24, 39, 0.74)),
+        url("https://images.unsplash.com/photo-1517935706615-2717063c2225?auto=format&fit=crop&w=1200&q=80");
+      background-size: cover;
+      background-position: center;
+    }
+
     .content {
       position: relative;
       z-index: 1;
@@ -368,13 +377,32 @@
         </div>
       </a>
 
+
+      <a class="trip-card niagara-toronto" href="niagara_toronto_2n3d.html">
+        <div class="content">
+          <div class="badge">Canada · 2 Nights 3 Days</div>
+          <h2>나이아가라 캐나다 + 토론토 2박 3일</h2>
+          <p>
+            Solon에서 출발해 Niagara Falls Canada Side에서 1박,
+            Toronto에서 1박한 뒤 다시 Solon으로 돌아오는 국경 통과 자동차 여행 일정입니다.
+          </p>
+          <div class="meta">
+            <span class="chip">2 Nights 3 Days</span>
+            <span class="chip">Canada Side</span>
+            <span class="chip">Toronto</span>
+          </div>
+          <div class="button">나이아가라·토론토 일정 보기 →</div>
+        </div>
+      </a>
+
     </section>
 
     <div class="note">
       연결할 때는 같은 폴더 안에 이 파일을 <code>index.html</code>로 두고,
       각 여행 상세 파일을 카드의 <code>href</code> 값과 같은 이름으로 두면 됩니다.
       새로 추가된 당일 코스 파일명은 <code>ark_columbus_solon_daytrip.html</code>과
-      <code>niagara_solon_daytrip.html</code>입니다.
+      <code>niagara_solon_daytrip.html</code>입니다. 캐나다 2박 3일 파일명은
+      <code>niagara_toronto_2n3d.html</code>입니다.
     </div>
   </main>
 </body>

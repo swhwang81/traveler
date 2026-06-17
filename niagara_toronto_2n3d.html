@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solon 출발 Niagara Falls Canada + Toronto 2박 3일</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --red: #dc2626;
+      --green: #059669;
+      --shadow: 0 18px 45px rgba(17, 24, 39, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(8,145,178,.18), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(37,99,235,.16), transparent 34%),
+        var(--bg);
+    }
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 26px 18px 56px; }
+    .hero {
+      position: relative; overflow: hidden; border-radius: 32px; min-height: 320px;
+      padding: 34px; color: white; box-shadow: var(--shadow);
+      background:
+        linear-gradient(120deg, rgba(17, 24, 39, .84), rgba(17, 24, 39, .25)),
+        url("https://images.unsplash.com/photo-1533094602577-198d3beab8ea?auto=format&fit=crop&w=1800&q=80") center/cover;
+    }
+    .hero .badge {
+      display:inline-flex; padding:8px 12px; border-radius:999px;
+      background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3);
+      font-weight:800;
+    }
+    h1 { margin:18px 0 10px; font-size:clamp(30px,5vw,56px); letter-spacing:-.06em; line-height:1.02; }
+    .hero p { max-width:780px; margin:0; line-height:1.65; color:rgba(255,255,255,.9); }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; padding:12px 16px;
+      border-radius:999px; text-decoration:none; font-weight:850; border:none; cursor:pointer;
+      background:white; color:#111827;
+    }
+    .btn.secondary { background:rgba(255,255,255,.15); color:white; border:1px solid rgba(255,255,255,.26); }
+    .summary-grid { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; margin:18px 0; }
+    .summary-card { padding:16px; border-radius:20px; background:white; border:1px solid var(--line); box-shadow:0 10px 25px rgba(17,24,39,.08); }
+    .summary-card b { display:block; margin-bottom:6px; font-size:14px; }
+    .summary-card span { display:block; color:var(--muted); font-size:13px; line-height:1.45; }
+    .tabs { display:flex; flex-wrap:wrap; gap:8px; margin: 6px 0 18px; }
+    .tab {
+      padding:11px 14px; border-radius:999px; background:white; border:1px solid var(--line);
+      font-weight:850; cursor:pointer; color:#374151;
+    }
+    .tab.active { background:var(--blue); color:white; border-color:var(--blue); }
+    .main { display:grid; grid-template-columns: 1fr 440px; gap:18px; align-items:start; }
+    .panel { background:white; border:1px solid var(--line); border-radius:24px; box-shadow:0 12px 28px rgba(17,24,39,.08); overflow:hidden; }
+    .panel-head { padding:20px 22px 12px; border-bottom:1px solid var(--line); }
+    .panel-head h2 { margin:0 0 8px; font-size:25px; letter-spacing:-.04em; }
+    .panel-head p { margin:0; color:var(--muted); line-height:1.55; }
+    .notice { margin: 14px 22px 0; padding: 14px 16px; border-radius: 16px; background:#eff6ff; color:#1e40af; font-size:14px; line-height:1.55; }
+    .timeline { padding: 6px 18px 20px; }
+    .stop { display:grid; grid-template-columns: 88px 1fr; gap:12px; padding:16px 4px; border-top:1px solid var(--line); }
+    .stop:first-child { border-top:none; }
+    .time { font-weight:900; color:var(--blue); }
+    .stop h3 { margin:0 0 5px; font-size:18px; }
+    .stop .ko { color:var(--muted); font-size:13px; margin-bottom:8px; }
+    .stop p { margin:0 0 8px; color:#374151; line-height:1.55; font-size:14px; }
+    .tip { display:inline-block; color:#065f46; background:#ecfdf5; padding:8px 10px; border-radius:12px; font-size:13px; line-height:1.45; }
+    .map-panel { position:sticky; top:16px; }
+    #map { height:560px; border-bottom:1px solid var(--line); }
+    .map-info { padding:16px; }
+    .map-info h3 { margin:0 0 8px; }
+    .map-info p { margin:0 0 12px; color:var(--muted); font-size:14px; line-height:1.55; }
+    .photo-grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; margin-top:18px; }
+    .photo-card { overflow:hidden; border-radius:20px; background:white; border:1px solid var(--line); box-shadow:0 10px 25px rgba(17,24,39,.08); }
+    .photo-card img { display:block; width:100%; height:145px; object-fit:cover; background:#e5e7eb; }
+    .photo-card div { padding:12px; font-size:14px; font-weight:850; }
+    .sources { margin-top:18px; padding:18px 20px; border-radius:20px; background:#f9fafb; border:1px solid var(--line); color:#4b5563; font-size:13px; line-height:1.6; }
+    .sources h3 { margin:0 0 8px; color:#111827; }
+    @media (max-width: 980px) {
+      .summary-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .main { grid-template-columns:1fr; }
+      .map-panel { position:static; }
+    }
+    @media (max-width: 620px) {
+      .wrap { padding:16px 12px 38px; }
+      .hero { padding:24px 20px; border-radius:22px; }
+      .summary-grid { grid-template-columns:1fr; }
+      .stop { grid-template-columns:1fr; gap:4px; }
+      #map { height:420px; }
+      .photo-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="badge">Canada Road Trip · 2 Nights 3 Days</div>
+      <h1>Niagara Falls Canada + Toronto 2박 3일</h1>
+      <p>
+        Solon에서 출발해 나이아가라 폭포 캐나다 사이드에서 1박,
+        다음 날 토론토로 이동해 1박한 뒤 Solon으로 돌아오는 가족형 자동차 여행 일정입니다.
+      </p>
+      <div class="actions">
+        <a class="btn" id="heroMapLink" href="#" target="_blank" rel="noopener">선택 날짜 Google Maps 열기</a>
+        <a class="btn secondary" href="index.html">일정 모음으로 돌아가기</a>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <div class="summary-card"><b>코스 유형</b><span>국경 통과 포함 2박 3일 자동차 여행</span></div>
+      <div class="summary-card"><b>숙박</b><span>1박 Niagara Falls Canada Side · 1박 Toronto</span></div>
+      <div class="summary-card"><b>핵심 동선</b><span>Solon → Niagara Falls ON → Toronto → Solon</span></div>
+      <div class="summary-card"><b>중요 준비</b><span>여권/비자 조건, 국경 대기시간, 호텔 주차 확인</span></div>
+    </section>
+
+    <div class="tabs" id="tabs"></div>
+
+    <section class="main">
+      <article class="panel">
+        <div class="panel-head">
+          <h2 id="dayTitle">Day</h2>
+          <p id="daySummary"></p>
+        </div>
+        <div class="notice">
+          캐나다 입국과 미국 재입국이 포함됩니다. 모든 탑승자의 여권 및 체류 신분 관련 서류를 반드시 확인하세요.
+        </div>
+        <div class="timeline" id="timeline"></div>
+      </article>
+
+      <aside class="panel map-panel">
+        <div id="map"></div>
+        <div class="map-info">
+          <h3>지도 동선</h3>
+          <p id="mapDesc">날짜를 선택하면 해당 날짜의 이동 경로가 표시됩니다.</p>
+          <a class="btn" id="dayMapLink" href="#" target="_blank" rel="noopener">이 날짜 Google Maps 열기</a>
+        </div>
+      </aside>
+    </section>
+
+    <section class="photo-grid" id="photoGrid"></section>
+
+    <section class="sources">
+      <h3>확인 메모</h3>
+      <p>Niagara Parks는 Niagara Falls 자체는 항상 볼 수 있지만 각 어트랙션과 식당 운영 시간은 장소별로 다르며 변경될 수 있다고 안내합니다.</p>
+      <p>Journey Behind the Falls는 엘리베이터로 내려가 터널과 전망 데크에서 Horseshoe Falls를 가까이 보는 대표 어트랙션입니다.</p>
+      <p>CN Tower와 Ripley’s Aquarium은 토론토 다운타운에서 서로 가까워 같은 날 묶어서 보기 좋은 가족형 코스입니다.</p>
+      <p>캐나다 입국 요건은 국적, 이동 방식, 소지 문서에 따라 달라질 수 있으므로 Canada.ca의 공식 안내와 CBSA 정보를 방문 전 확인하세요.</p>
+    </section>
+  </div>
+
+  <script>
+    const days = [
+  {
+    "id": "day1",
+    "date": "Day 1",
+    "title": "Solon → Niagara Falls Canada Side",
+    "summary": "솔론에서 출발해 국경을 넘어 캐나다 사이드 나이아가라 폭포를 보고 1박하는 날입니다.",
+    "routeMode": "driving",
+    "stops": [
+      {
+        "time": "07:00",
+        "name": "Solon 출발",
+        "ko": "솔론 출발",
+        "lat": 41.3898,
+        "lng": -81.4412,
+        "address": "Solon, OH",
+        "maps_query": "Solon, OH",
+        "category": "출발",
+        "description": "나이아가라 캐나다 사이드까지 이동하는 날입니다. 국경 통과 시간이 변수이므로 아침 일찍 출발하는 것을 추천합니다.",
+        "tip": "여권, 비자/eTA 필요 여부, 차량 보험/렌터카 조건 확인.",
+        "photo": "https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "08:45",
+        "name": "Erie, PA 휴식",
+        "ko": "펜실베이니아 이리 근처 휴식",
+        "lat": 42.1292,
+        "lng": -80.0851,
+        "address": "Erie, PA",
+        "maps_query": "Erie, PA",
+        "category": "휴식",
+        "description": "화장실, 커피, 간단한 간식을 위한 첫 번째 휴식 지점입니다. 국경 전까지 컨디션을 조절합니다.",
+        "tip": "20~30분 정도 짧게 쉬고 다시 이동.",
+        "photo": "https://images.unsplash.com/photo-1533777857889-4be7c70b33f7?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "10:45",
+        "name": "Rainbow Bridge Border Crossing",
+        "ko": "레인보우 브리지 국경 통과",
+        "lat": 43.0896,
+        "lng": -79.0679,
+        "address": "Rainbow Bridge, Niagara Falls",
+        "maps_query": "Rainbow Bridge Border Crossing Niagara Falls",
+        "category": "국경",
+        "description": "미국에서 캐나다로 넘어가는 구간입니다. 실제 대기 시간에 따라 일정이 30분 이상 달라질 수 있습니다.",
+        "tip": "모든 탑승자의 여권/필요 서류를 차 안에서 바로 꺼낼 수 있게 준비.",
+        "photo": "https://images.unsplash.com/photo-1494783367193-149034c05e8f?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "11:30",
+        "name": "Niagara Falls Hotel / Parking",
+        "ko": "나이아가라 캐나다 사이드 호텔 또는 주차",
+        "lat": 43.0828,
+        "lng": -79.0742,
+        "address": "Niagara Falls, Ontario",
+        "maps_query": "Niagara Falls Ontario Fallsview hotel",
+        "category": "숙소/주차",
+        "description": "호텔 체크인 시간이 이르면 짐을 맡기고 폭포 쪽으로 이동합니다. Fallsview나 Clifton Hill 근처 숙소가 동선상 편합니다.",
+        "tip": "호텔 주차비가 높을 수 있으므로 예약 전 주차 조건 확인.",
+        "photo": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "12:30",
+        "name": "Table Rock Centre",
+        "ko": "테이블 록 센터 / 호스슈 폭포 전망",
+        "lat": 43.0799,
+        "lng": -79.0783,
+        "address": "Table Rock Centre, Niagara Falls, ON",
+        "maps_query": "Table Rock Centre Niagara Falls Ontario",
+        "category": "관광",
+        "description": "캐나다 사이드에서 Horseshoe Falls를 가장 가까이 보는 핵심 지점입니다. 점심, 기념품, 화장실 이용도 편합니다.",
+        "tip": "폭포 물안개가 강할 수 있어 방수 재킷이나 여벌 옷 추천.",
+        "photo": "https://images.unsplash.com/photo-1533094602577-198d3beab8ea?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "14:00",
+        "name": "Journey Behind the Falls",
+        "ko": "저니 비하인드 더 폴스",
+        "lat": 43.0793,
+        "lng": -79.0782,
+        "address": "Journey Behind the Falls, Niagara Falls, ON",
+        "maps_query": "Journey Behind the Falls Niagara Falls Ontario",
+        "category": "어트랙션",
+        "description": "터널을 내려가 폭포 뒤쪽과 아래쪽 전망 데크에서 Horseshoe Falls를 가까이 보는 대표 어트랙션입니다.",
+        "tip": "시간대별 티켓과 운영 시간은 방문일 기준으로 확인.",
+        "photo": "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "16:00",
+        "name": "Clifton Hill",
+        "ko": "클리프턴 힐",
+        "lat": 43.0914,
+        "lng": -79.0757,
+        "address": "Clifton Hill, Niagara Falls, ON",
+        "maps_query": "Clifton Hill Niagara Falls Ontario",
+        "category": "산책/놀이",
+        "description": "식당, 간식, 관람차, 가족형 오락 시설이 많은 번화가입니다. 아이들과 함께라면 가볍게 산책하기 좋습니다.",
+        "tip": "상업시설이 많아 지출이 커질 수 있으니 시간과 예산을 정해두기.",
+        "photo": "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "18:00",
+        "name": "Niagara Falls Canada Side Dinner",
+        "ko": "나이아가라 캐나다 사이드 저녁",
+        "lat": 43.0896,
+        "lng": -79.0849,
+        "address": "Niagara Falls, ON restaurants",
+        "maps_query": "Niagara Falls Ontario restaurants",
+        "category": "식사",
+        "description": "호텔 위치에 따라 Fallsview, Clifton Hill, Lundy's Lane 쪽에서 저녁을 선택합니다.",
+        "tip": "폭포 야경/조명까지 볼 계획이면 식당을 폭포 근처로 잡기.",
+        "photo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "20:30",
+        "name": "Falls Illumination Walk",
+        "ko": "폭포 야경 산책",
+        "lat": 43.081,
+        "lng": -79.0754,
+        "address": "Niagara Falls Illumination, Niagara Falls, ON",
+        "maps_query": "Niagara Falls Illumination Niagara Falls Ontario",
+        "category": "야경",
+        "description": "캐나다 사이드의 장점은 폭포 야경을 보기 좋다는 점입니다. 숙소가 가까우면 저녁 후 가볍게 산책합니다.",
+        "tip": "밤에는 물안개와 바람 때문에 체감온도가 낮을 수 있음.",
+        "photo": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80"
+      }
+    ],
+    "googleMapsUrl": "https://www.google.com/maps/dir/Solon,+OH/Erie,+PA/Rainbow+Bridge+Border+Crossing+Niagara+Falls/Niagara+Falls+Ontario+Fallsview+hotel/Table+Rock+Centre+Niagara+Falls+Ontario/Journey+Behind+the+Falls+Niagara+Falls+Ontario/Clifton+Hill+Niagara+Falls+Ontario/Niagara+Falls+Ontario+restaurants/Niagara+Falls+Illumination+Niagara+Falls+Ontario"
+  },
+  {
+    "id": "day2",
+    "date": "Day 2",
+    "title": "Niagara Falls → Niagara-on-the-Lake → Toronto",
+    "summary": "오전에는 나이아가라 주변을 조금 더 보고, 오후에는 토론토로 이동해 CN Tower 주변에서 1박하는 날입니다.",
+    "routeMode": "driving",
+    "stops": [
+      {
+        "time": "09:00",
+        "name": "Hotel Checkout",
+        "ko": "나이아가라 호텔 체크아웃",
+        "lat": 43.0828,
+        "lng": -79.0742,
+        "address": "Niagara Falls, Ontario",
+        "maps_query": "Niagara Falls Ontario",
+        "category": "출발",
+        "description": "호텔 체크아웃 후 토론토로 이동하는 날입니다. 오전에 폭포를 한 번 더 보거나 Niagara-on-the-Lake를 들를 수 있습니다.",
+        "tip": "주차시간 초과 요금 확인.",
+        "photo": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "09:30",
+        "name": "Niagara Parkway Scenic Drive",
+        "ko": "나이아가라 파크웨이 드라이브",
+        "lat": 43.1335,
+        "lng": -79.0614,
+        "address": "Niagara Parkway, Niagara Falls, ON",
+        "maps_query": "Niagara Parkway Niagara Falls Ontario",
+        "category": "드라이브",
+        "description": "나이아가라 강을 따라 이어지는 경치 좋은 드라이브 구간입니다. 시간 여유가 있으면 Whirlpool Aero Car 근처를 짧게 들를 수 있습니다.",
+        "tip": "토론토 이동 시간을 고려해 오전 일정은 가볍게.",
+        "photo": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "10:30",
+        "name": "Niagara-on-the-Lake",
+        "ko": "나이아가라온더레이크",
+        "lat": 43.2557,
+        "lng": -79.0715,
+        "address": "Niagara-on-the-Lake, ON",
+        "maps_query": "Niagara-on-the-Lake Ontario",
+        "category": "마을 산책",
+        "description": "작고 예쁜 마을 분위기의 산책 코스입니다. 카페, 아이스크림, 기념품 가게를 짧게 둘러보기 좋습니다.",
+        "tip": "토론토 시내 진입 전 여유로운 휴식 포인트.",
+        "photo": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "12:00",
+        "name": "Toronto 이동",
+        "ko": "토론토 방향 출발",
+        "lat": 43.2557,
+        "lng": -79.0715,
+        "address": "Niagara-on-the-Lake, ON",
+        "maps_query": "Niagara-on-the-Lake Ontario",
+        "category": "이동",
+        "description": "QEW를 따라 토론토로 이동합니다. 교통 상황에 따라 도착 시간이 크게 달라질 수 있습니다.",
+        "tip": "토론토 도심 주차가 비싸므로 호텔 주차 조건 확인.",
+        "photo": "https://images.unsplash.com/photo-1444084316824-dc26d6657664?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "14:00",
+        "name": "Toronto Hotel / Parking",
+        "ko": "토론토 호텔 체크인 또는 주차",
+        "lat": 43.6426,
+        "lng": -79.3871,
+        "address": "Downtown Toronto, ON",
+        "maps_query": "Downtown Toronto hotel parking",
+        "category": "숙소/주차",
+        "description": "CN Tower, Ripley's Aquarium, Harbourfront 근처 숙소면 도보 이동이 편합니다. 차는 호텔에 두고 시내는 도보/대중교통을 추천합니다.",
+        "tip": "도심 운전보다 주차 후 도보 이동이 편함.",
+        "photo": "https://images.unsplash.com/photo-1517935706615-2717063c2225?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "15:00",
+        "name": "CN Tower",
+        "ko": "CN 타워",
+        "lat": 43.6426,
+        "lng": -79.3871,
+        "address": "CN Tower, Toronto, ON",
+        "maps_query": "CN Tower Toronto",
+        "category": "관광",
+        "description": "토론토 대표 전망 명소입니다. 날씨가 좋으면 도심과 Lake Ontario 전망을 볼 수 있습니다.",
+        "tip": "입장권과 운영 시간은 공식 사이트에서 방문일 기준 확인.",
+        "photo": "https://images.unsplash.com/photo-1517935706615-2717063c2225?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "16:30",
+        "name": "Ripley's Aquarium of Canada",
+        "ko": "리플리 아쿠아리움",
+        "lat": 43.6424,
+        "lng": -79.386,
+        "address": "Ripley's Aquarium of Canada, Toronto, ON",
+        "maps_query": "Ripley's Aquarium of Canada Toronto",
+        "category": "가족 관광",
+        "description": "CN Tower 바로 옆에 있는 가족 친화적인 실내 관광지입니다. 날씨가 좋지 않을 때도 안정적인 코스입니다.",
+        "tip": "CN Tower와 묶어서 보기 좋은 동선.",
+        "photo": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "18:30",
+        "name": "Harbourfront Centre",
+        "ko": "하버프론트 산책",
+        "lat": 43.6387,
+        "lng": -79.3816,
+        "address": "Harbourfront Centre, Toronto, ON",
+        "maps_query": "Harbourfront Centre Toronto",
+        "category": "산책",
+        "description": "Lake Ontario를 따라 산책하기 좋은 구간입니다. 저녁 전후로 가볍게 걷기 좋습니다.",
+        "tip": "바람이 강할 수 있어 겉옷 준비.",
+        "photo": "https://images.unsplash.com/photo-1537734796389-e1fc293cf856?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "19:30",
+        "name": "Toronto Dinner",
+        "ko": "토론토 저녁 식사",
+        "lat": 43.6532,
+        "lng": -79.3832,
+        "address": "Toronto restaurants",
+        "maps_query": "Downtown Toronto restaurants",
+        "category": "식사",
+        "description": "도심, Harbourfront, Koreatown, Chinatown 중 숙소 위치와 취향에 맞게 선택합니다.",
+        "tip": "한국 음식이 필요하면 Koreatown 쪽도 선택 가능.",
+        "photo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80"
+      }
+    ],
+    "googleMapsUrl": "https://www.google.com/maps/dir/Niagara+Falls+Ontario/Niagara+Parkway+Niagara+Falls+Ontario/Niagara-on-the-Lake+Ontario/Niagara-on-the-Lake+Ontario/Downtown+Toronto+hotel+parking/CN+Tower+Toronto/Ripley's+Aquarium+of+Canada+Toronto/Harbourfront+Centre+Toronto/Downtown+Toronto+restaurants"
+  },
+  {
+    "id": "day3",
+    "date": "Day 3",
+    "title": "Toronto → Solon 복귀",
+    "summary": "오전에 토론토 핵심 장소를 짧게 보고, 국경을 넘어 솔론으로 돌아오는 복귀일입니다.",
+    "routeMode": "driving",
+    "stops": [
+      {
+        "time": "09:00",
+        "name": "St. Lawrence Market",
+        "ko": "세인트 로렌스 마켓",
+        "lat": 43.6487,
+        "lng": -79.3716,
+        "address": "St. Lawrence Market, Toronto, ON",
+        "maps_query": "St. Lawrence Market Toronto",
+        "category": "시장/아침",
+        "description": "토론토 대표 시장입니다. 아침이나 브런치 느낌으로 짧게 들르기 좋습니다.",
+        "tip": "월요일 휴무 등 운영일 확인 필요.",
+        "photo": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "10:30",
+        "name": "Nathan Phillips Square",
+        "ko": "토론토 시청 광장",
+        "lat": 43.6525,
+        "lng": -79.3839,
+        "address": "Nathan Phillips Square, Toronto, ON",
+        "maps_query": "Nathan Phillips Square Toronto",
+        "category": "포토스팟",
+        "description": "Toronto 사인과 시청 건물을 배경으로 사진 찍기 좋은 짧은 방문지입니다.",
+        "tip": "복귀일이라 오래 머물지 않고 사진 중심.",
+        "photo": "https://images.unsplash.com/photo-1517935706615-2717063c2225?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "11:30",
+        "name": "Toronto 출발",
+        "ko": "솔론 방향 출발",
+        "lat": 43.6532,
+        "lng": -79.3832,
+        "address": "Toronto, ON",
+        "maps_query": "Toronto, ON",
+        "category": "출발",
+        "description": "국경 대기와 장거리 운전을 고려해 점심 전후에는 출발하는 것을 추천합니다.",
+        "tip": "캐나다에서 미국으로 돌아갈 때 필요한 서류와 반입 제한 품목 확인.",
+        "photo": "https://images.unsplash.com/photo-1444084316824-dc26d6657664?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "13:00",
+        "name": "Peace Bridge Border Crossing",
+        "ko": "피스 브리지 국경 통과",
+        "lat": 42.9068,
+        "lng": -78.912,
+        "address": "Peace Bridge, Fort Erie, ON / Buffalo, NY",
+        "maps_query": "Peace Bridge Border Crossing",
+        "category": "국경",
+        "description": "토론토에서 솔론으로 돌아올 때 자주 쓰는 국경 통과 지점입니다. 실시간 대기시간에 따라 일정이 달라질 수 있습니다.",
+        "tip": "식품·쇼핑 물품 등 반입 규정 확인.",
+        "photo": "https://images.unsplash.com/photo-1494783367193-149034c05e8f?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "14:00",
+        "name": "Buffalo / Erie 방향 점심 또는 휴식",
+        "ko": "버팔로 또는 이리 근처 휴식",
+        "lat": 42.8864,
+        "lng": -78.8784,
+        "address": "Buffalo, NY",
+        "maps_query": "Buffalo, NY restaurants",
+        "category": "식사/휴식",
+        "description": "국경 통과 후 미국 쪽에서 점심 또는 간단한 휴식을 잡습니다. 국경 대기 시간이 길었다면 여기서 충분히 쉬는 것이 좋습니다.",
+        "tip": "아이 동반이면 여기서 긴 휴식 추천.",
+        "photo": "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80"
+      },
+      {
+        "time": "17:30",
+        "name": "Solon 도착",
+        "ko": "솔론 도착",
+        "lat": 41.3898,
+        "lng": -81.4412,
+        "address": "Solon, OH",
+        "maps_query": "Solon, OH",
+        "category": "도착",
+        "description": "2박 3일 캐나다 사이드 나이아가라·토론토 코스 종료입니다.",
+        "tip": "국경 대기와 교통 상황에 따라 도착 시간이 늦어질 수 있음.",
+        "photo": "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1200&q=80"
+      }
+    ],
+    "googleMapsUrl": "https://www.google.com/maps/dir/St.+Lawrence+Market+Toronto/Nathan+Phillips+Square+Toronto/Toronto,+ON/Peace+Bridge+Border+Crossing/Buffalo,+NY+restaurants/Solon,+OH"
+  }
+];
+    let currentDay = days[0];
+    let map, markersLayer, routeLine;
+
+    const tabs = document.getElementById('tabs');
+    const timeline = document.getElementById('timeline');
+    const photoGrid = document.getElementById('photoGrid');
+    const dayTitle = document.getElementById('dayTitle');
+    const daySummary = document.getElementById('daySummary');
+    const mapDesc = document.getElementById('mapDesc');
+    const dayMapLink = document.getElementById('dayMapLink');
+    const heroMapLink = document.getElementById('heroMapLink');
+
+    function initMap() {
+      map = L.map('map').setView([43.091550, -79.401450], 7);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      markersLayer = L.layerGroup().addTo(map);
+    }
+
+    function renderTabs() {
+      tabs.innerHTML = '';
+      days.forEach(day => {
+        const btn = document.createElement('button');
+        btn.className = 'tab' + (day.id === currentDay.id ? ' active' : '');
+        btn.textContent = `${day.date} · ${day.title.split('→')[0].trim()}`;
+        btn.onclick = () => {
+          currentDay = day;
+          render();
+        };
+        tabs.appendChild(btn);
+      });
+    }
+
+    function renderTimeline() {
+      dayTitle.textContent = `${currentDay.date} · ${currentDay.title}`;
+      daySummary.textContent = currentDay.summary;
+      timeline.innerHTML = currentDay.stops.map(stop => `
+        <div class="stop">
+          <div class="time">${stop.time}</div>
+          <div>
+            <h3>${stop.name}</h3>
+            <div class="ko">${stop.ko || ''} · ${stop.category || ''}</div>
+            <p>${stop.description || ''}</p>
+            <span class="tip">${stop.tip || ''}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPhotos() {
+      photoGrid.innerHTML = currentDay.stops.filter(s => s.photo).slice(0, 6).map(stop => `
+        <div class="photo-card">
+          <img src="${stop.photo}" alt="${stop.name}" loading="lazy" />
+          <div>${stop.name}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderMap() {
+      markersLayer.clearLayers();
+      if (routeLine) map.removeLayer(routeLine);
+      const latlngs = [];
+      currentDay.stops.forEach((s, idx) => {
+        const latlng = [s.lat, s.lng];
+        latlngs.push(latlng);
+        const marker = L.marker(latlng).addTo(markersLayer);
+        marker.bindPopup(`<b>${idx + 1}. ${s.name}</b><br>${s.time}<br>${s.ko || ''}`);
+      });
+      routeLine = L.polyline(latlngs, { weight: 5, opacity: 0.78 }).addTo(map);
+      map.fitBounds(routeLine.getBounds(), { padding: [28, 28] });
+      mapDesc.textContent = currentDay.summary;
+      dayMapLink.href = currentDay.googleMapsUrl;
+      heroMapLink.href = currentDay.googleMapsUrl;
+    }
+
+    function render() {
+      renderTabs();
+      renderTimeline();
+      renderPhotos();
+      renderMap();
+    }
+
+    initMap();
+    render();
+  </script>
+</body>
+</html>
